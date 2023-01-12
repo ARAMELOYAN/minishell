@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/01/11 17:19:21 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/01/12 16:13:32 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@
 # include <errno.h>
 # include <stdio.h>
 # include <term.h>
+
+extern char	**environ;
 
 	struct dirent	*entity;
 	DIR				*directory;
