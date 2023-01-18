@@ -1,6 +1,6 @@
 NAME = minishell
 
-SRCS = $(wildcard *.c), $(wildcard built_in/*.c)
+SRCS = $(wildcard *.c)
 
 OBJS = $(SRCS:.c=.o)
 
@@ -11,7 +11,7 @@ FLAGS = -Wall -Wextra -Werror
 RM = rm -rf
 
 .c.o:
-	$(CC) $(FLAGS) -c $< -o $(<:.c=.o)
+	$(CC) -c $< -o $(<:.c=.o)
 
 $(NAME): $(OBJS)
 	$(MAKE) bonus -C ./libft

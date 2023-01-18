@@ -6,13 +6,15 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/01/12 16:13:32 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/01/18 16:02:34 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef MINISHELL_H
 # define MINISHELL_H
 
+# include <readline/readline.h>
+# include <readline/history.h>
 # include "libft/libft.h"
 # include <sys/ioctl.h>
 # include <sys/wait.h>
@@ -29,7 +31,17 @@
 
 extern char	**environ;
 
-	struct dirent	*entity;
+typedef struct	cmd
+{
+	char		*pathname;
+	char		**arg;
+	struct cmd	*next;
+}	cmd_t;
+
+struct dirent	*entity;
+cmd_t	*add_cmd(char *str, cmd_t *cmd);
+cmd_t	*del_cmd(cmd_t *cmd);
+
 	DIR				*directory;
 	char 			**ex_inp_spl;
 	char 			**path_split;
