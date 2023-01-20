@@ -3,6 +3,8 @@
 cmd_t	*add_cmd(char *str, cmd_t *cmd)
 {
 	cmd_t	*cmd_1;
+
+	cmd_1->num++;
 	if (!str || !*str)
 		return (NULL);
 	cmd_1 = (cmd_t *)malloc(sizeof(cmd_t));
@@ -12,7 +14,12 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd)
 	while (cmd && cmd->next)
 		cmd = cmd->next;
 	if (cmd)
+	{
 		cmd->next = cmd_1;
+		cmd_1->fd = 1;
+		return (cmd_1);
+	}
+	cmd_1->fd = 0;
 	return (cmd_1);
 }
 
@@ -20,6 +27,7 @@ cmd_t	*del_cmd(cmd_t *cmd)
 {
 	cmd_t	*cmd_1;
 
+	cmd_1->num--;
 	cmd_1 = cmd->next;
 	free(cmd->pathname);
 	iter_i = 0;
@@ -83,7 +91,6 @@ int	check_serror(char *s, cmd_t **cmd)
 		if (!dst)
 			return (0);
 		ft_strlcpy(dst, s, ptr - s);//poxaren@ kareli e memmove ogtagorcel erevi
-		printf("%s\n", dst);
 		if (*cmd)
 			add_cmd(dst, *cmd);
 		else
@@ -97,6 +104,43 @@ int	check_serror(char *s, cmd_t **cmd)
 	else
 		*cmd = add_cmd(s, *cmd);
 	return (1);
+}
+
+int	funk(cmd_t **cmd)
+{
+	int	fd[2];
+	int	pid;
+
+	while (*cmd->num--)
+	{
+		pid = fork();
+		if (pid == -1)
+			perror("\e[1;31mCHEXAV\e[0;0m");
+		else if (pid == 0)
+		{
+			if (pipe(fd) == -1)
+				perror(0);
+			else 
+			{
+				dup2(fd[1], 1);
+				*cmd->next->fd = fd[0];
+			}
+		}
+		if (*cmd->fd)
+			if (dup2(cmd->fd, 0) == -1)
+				perror(0);
+		if (!buildin(*cmd) && !exec(*cmd))
+			perror("\e[1;31mSXAL\e[0;0m");
+		if (fd[1])
+		{
+			close(fd[1]);
+			fd[1] = 0;
+		}
+		if (*cmd->fd)
+			close(*cmd->fd);
+		*cmd = del_cmd(cmd);
+	write(2, "\e[1;31mASKJHKAJSDASD\e[0;0m\n", 30);
+	}
 }
 
 int main()
@@ -120,12 +164,7 @@ int main()
 			continue ;
 		}
 		add_history(ch);
-		while (cmd)
-		{
-			if (!buildin(cmd) && !exec(cmd))
-				perror(0);
-			cmd = cmd->next;
-		}
+		funk(&cmd);
 		free(ch);
 	}
 	return (0);
