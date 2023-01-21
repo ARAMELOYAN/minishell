@@ -3,8 +3,8 @@
 cmd_t	*add_cmd(char *str, cmd_t *cmd)
 {
 	cmd_t	*cmd_1;
+	int		fd[2];
 
-	cmd_1->num++;
 	if (!str || !*str)
 		return (NULL);
 	cmd_1 = (cmd_t *)malloc(sizeof(cmd_t));
@@ -13,13 +13,16 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd)
 	cmd_1->next = NULL;
 	while (cmd && cmd->next)
 		cmd = cmd->next;
+	cmd_1->fd[0] = 0;
+	cmd_1->fd[1] = 1;
 	if (cmd)
 	{
+		if (pipe(fd) == -1)
+			perror(0);
+		cmd->fd[1] = fd[1];
 		cmd->next = cmd_1;
-		cmd_1->fd = 1;
-		return (cmd_1);
+		cmd_1->fd[0] = fd[0];
 	}
-	cmd_1->fd = 0;
 	return (cmd_1);
 }
 
@@ -27,7 +30,10 @@ cmd_t	*del_cmd(cmd_t *cmd)
 {
 	cmd_t	*cmd_1;
 
-	cmd_1->num--;
+	if (cmd->fd[0])
+		close(cmd->fd[0]);
+	if (cmd->fd[1] > 1)
+		close(cmd->fd[1]);
 	cmd_1 = cmd->next;
 	free(cmd->pathname);
 	iter_i = 0;
@@ -106,40 +112,26 @@ int	check_serror(char *s, cmd_t **cmd)
 	return (1);
 }
 
-int	funk(cmd_t **cmd)
+int	funk(cmd_t *cmd)
 {
-	int	fd[2];
 	int	pid;
 
-	while (*cmd->num--)
+	while (cmd)
 	{
 		pid = fork();
 		if (pid == -1)
-			perror("\e[1;31mCHEXAV\e[0;0m");
+			perror("\e[1;31mfork\e[0;0m");
 		else if (pid == 0)
 		{
-			if (pipe(fd) == -1)
-				perror(0);
-			else 
-			{
-				dup2(fd[1], 1);
-				*cmd->next->fd = fd[0];
-			}
+			if (dup2(cmd->fd[1], 1) == -1)
+				perror("\e[1;31mdup2\e[0;0m");
+			if (dup2(cmd->fd[0], 0) == -1)
+				perror("\e[1;31mdup2\e[0;0m");
+			if (!buildin(cmd) && !exec(cmd))
+				perror("\e[1;31mCommand not found\e[0;0m");
+			break ;
 		}
-		if (*cmd->fd)
-			if (dup2(cmd->fd, 0) == -1)
-				perror(0);
-		if (!buildin(*cmd) && !exec(*cmd))
-			perror("\e[1;31mSXAL\e[0;0m");
-		if (fd[1])
-		{
-			close(fd[1]);
-			fd[1] = 0;
-		}
-		if (*cmd->fd)
-			close(*cmd->fd);
-		*cmd = del_cmd(cmd);
-	write(2, "\e[1;31mASKJHKAJSDASD\e[0;0m\n", 30);
+		cmd = del_cmd(cmd);
 	}
 }
 
@@ -164,7 +156,9 @@ int main()
 			continue ;
 		}
 		add_history(ch);
-		funk(&cmd);
+		funk(cmd);
+		wait(NULL);
+		wait(NULL);
 		free(ch);
 	}
 	return (0);
