@@ -7,6 +7,7 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd)
 
 	if (!str || !*str)
 		return (NULL);
+	count++;
 	cmd_1 = (cmd_t *)malloc(sizeof(cmd_t));
 	cmd_1->arg = ft_split(str, ' ');
 	cmd_1->pathname = ft_strdup(cmd_1->arg[0]);	
@@ -88,6 +89,7 @@ int	check_serror(char *s, cmd_t **cmd)
 	char	*ptr;
 
 	*cmd = NULL;
+	count = 0;
 	ptr = ft_strchr(s, '|');
 	while(ptr)
 	{
@@ -129,7 +131,11 @@ int	funk(cmd_t *cmd)
 				perror("\e[1;31mdup2\e[0;0m");
 			if (!buildin(cmd) && !exec(cmd))
 				perror("\e[1;31mCommand not found\e[0;0m");
-			break ;
+			if (cmd->fd[0])
+				close(cmd->fd[0]);
+			if (cmd->fd[1] > 1)
+				close(cmd->fd[1]);
+			exit(0);
 		}
 		cmd = del_cmd(cmd);
 	}
@@ -140,25 +146,24 @@ int main()
 	char	*ch;
 	cmd_t	*cmd;
 
-	sig();
 	while (1)
 	{
 		//SHLVL++;
-
 		ch = readline("minishell$ ");
 		if (!ch)
 			continue;
 		if (!check_serror(ch, &cmd))
 		{
-			errno = 258;
 			perror(strerror(errno));
 			free(ch);
 			continue ;
 		}
 		add_history(ch);
 		funk(cmd);
-		wait(NULL);
-		wait(NULL);
+		while (count--)
+		{
+			wait(NULL);
+		}
 		free(ch);
 	}
 	return (0);
