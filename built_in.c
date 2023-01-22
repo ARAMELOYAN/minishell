@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/01/21 14:56:08 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/01/22 14:10:34 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,18 +59,21 @@ void	export(cmd_t *cmd)
 
 void	pwd()
 {
-	printf("%s\n", getcwd(buffer, 200));
+	var_t	var;
+
+	printf("%s\n", getcwd(var.buffer, 200));
 }
 
 void	maneur(void)
 {
 	cmd_t	*cmd_1;
+	var_t	var;
 
 	cmd_1 = (cmd_t *)malloc(sizeof(cmd_t));
 	cmd_1->arg = (char **)malloc(sizeof(char *) * 4);
 	cmd_1->arg[0] = ft_strdup("export");
 	cmd_1->arg[1] = ft_strjoin("OLDPWD=", getenv("PWD"));
-	cmd_1->arg[2] = ft_strjoin("PWD=", getcwd(buffer, 200));
+	cmd_1->arg[2] = ft_strjoin("PWD=", getcwd(var.buffer, 200));
 	cmd_1->arg[3] = NULL;
 	cmd_1->next = NULL;
 	export(cmd_1);
@@ -100,26 +103,28 @@ int cd(cmd_t *cmd)
 
 void echom(cmd_t *cmd)
 {
-	iter_i = 0;
+	var_t	var;
+
+	var.iter_i = 0;
 	if (cmd->arg[1] && !ft_strncmp(cmd->arg[1], "-", 1))
-		while (cmd->arg[1][++iter_i])
-			if(ft_strncmp(cmd->arg[1] + iter_i, "n", 1))
+		while (cmd->arg[1][++var.iter_i])
+			if(ft_strncmp(cmd->arg[1] + var.iter_i, "n", 1))
 				break;
-	if (cmd->arg[1] && !cmd->arg[1][iter_i])
+	if (cmd->arg[1] && !cmd->arg[1][var.iter_i])
 	{
-		iter_i = 2;
-		while (cmd->arg[iter_i] && printf("%s", cmd->arg[iter_i]))
+		var.iter_i = 2;
+		while (cmd->arg[var.iter_i] && printf("%s", cmd->arg[var.iter_i]))
 		{
-			if (cmd->arg[++iter_i])
+			if (cmd->arg[++var.iter_i])
 				printf(" ");
 		}
 	}
 	else
 	{
-		iter_i = 1;
-		while (cmd->arg[iter_i] && printf("%s", cmd->arg[iter_i]))
+		var.iter_i = 1;
+		while (cmd->arg[var.iter_i] && printf("%s", cmd->arg[var.iter_i]))
 		{
-			if (cmd->arg[++iter_i])
+			if (cmd->arg[++var.iter_i])
 				printf(" ");
 		}
 		printf("\n");
@@ -128,9 +133,11 @@ void echom(cmd_t *cmd)
 
 void	env()
 {
-	iter_i = 0;
-	while (environ[iter_i])
-		printf("%s\n", environ[iter_i++]);
+	var_t	var;
+
+	var.iter_i = 0;
+	while (environ[var.iter_i])
+		printf("%s\n", environ[var.iter_i++]);
 }
 
 void exitm(cmd_t *cmd)

@@ -1,13 +1,13 @@
 #include "minishell.h"
 
-cmd_t	*add_cmd(char *str, cmd_t *cmd)
+cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 {
 	cmd_t	*cmd_1;
 	int		fd[2];
 
 	if (!str || !*str)
 		return (NULL);
-	count++;
+	var->count++;
 	cmd_1 = (cmd_t *)malloc(sizeof(cmd_t));
 	cmd_1->arg = ft_split(str, ' ');
 	cmd_1->pathname = ft_strdup(cmd_1->arg[0]);	
@@ -27,7 +27,7 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd)
 	return (cmd_1);
 }
 
-cmd_t	*del_cmd(cmd_t *cmd)
+cmd_t	*del_cmd(cmd_t *cmd, var_t *var)
 {
 	cmd_t	*cmd_1;
 
@@ -37,9 +37,9 @@ cmd_t	*del_cmd(cmd_t *cmd)
 		close(cmd->fd[1]);
 	cmd_1 = cmd->next;
 	free(cmd->pathname);
-	iter_i = 0;
-	while (cmd->arg[iter_i])
-		free(cmd->arg[iter_i++]);
+	var->iter_i = 0;
+	while (cmd->arg[var->iter_i])
+		free(cmd->arg[var->iter_i++]);
 	//free(cmd->arg);
 	free(cmd);
 	return (cmd_1);
@@ -83,13 +83,13 @@ int	buildin(cmd_t *cmd)
 		return (1);
 }
 
-int	check_serror(char *s, cmd_t **cmd)
+int	check_serror(char *s, cmd_t **cmd, var_t *var)
 {
 	char	*dst;
 	char	*ptr;
 
 	*cmd = NULL;
-	count = 0;
+	var->count = 0;
 	ptr = ft_strchr(s, '|');
 	while(ptr)
 	{
@@ -100,21 +100,21 @@ int	check_serror(char *s, cmd_t **cmd)
 			return (0);
 		ft_strlcpy(dst, s, ptr - s);//poxaren@ kareli e memmove ogtagorcel erevi
 		if (*cmd)
-			add_cmd(dst, *cmd);
+			add_cmd(dst, *cmd, var);
 		else
-			*cmd = add_cmd(dst, *cmd);
+			*cmd = add_cmd(dst, *cmd, var);
 		free(dst);
 		s = ptr;
 		ptr = ft_strchr(s, '|');
 	}
 	if (*cmd)
-		add_cmd(s, *cmd);
+		add_cmd(s, *cmd, var);
 	else
-		*cmd = add_cmd(s, *cmd);
+		*cmd = add_cmd(s, *cmd, var);
 	return (1);
 }
 
-int	funk(cmd_t *cmd)
+int	funk(cmd_t *cmd, var_t *var)
 {
 	int	pid;
 
@@ -137,7 +137,7 @@ int	funk(cmd_t *cmd)
 				close(cmd->fd[1]);
 			exit(0);
 		}
-		cmd = del_cmd(cmd);
+		cmd = del_cmd(cmd, var);
 	}
 }
 
@@ -145,26 +145,27 @@ int main()
 {
 	char	*ch;
 	cmd_t	*cmd;
+	var_t	*var;
 
+	var = (var_t *)malloc(sizeof(var_t));
 	while (1)
 	{
 		//SHLVL++;
 		ch = readline("minishell$ ");
 		if (!ch)
-			continue;
-		if (!check_serror(ch, &cmd))
+			continue ;
+		if (!check_serror(ch, &cmd, var))
 		{
 			perror(strerror(errno));
 			free(ch);
 			continue ;
 		}
 		add_history(ch);
-		funk(cmd);
-		while (count--)
-		{
+		funk(cmd, var);
+		while (var->count--)
 			wait(NULL);
-		}
 		free(ch);
 	}
+	free(var);
 	return (0);
 }
