@@ -17,7 +17,7 @@ $(NAME): $(OBJS)
 	$(MAKE) bonus -C ./libft
 	mv libft/libft.a .
 	$(MAKE) -C ./libft fclean
-	$(CC) $(OBJS) libft.a -lreadline -o $(NAME)
+	$(CC) -fsanitize=address $(OBJS) libft.a -lreadline -o $(NAME)
 
 all: $(NAME)
 

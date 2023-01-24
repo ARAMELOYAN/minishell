@@ -64,7 +64,7 @@ void	sig(void)
 
 int	buildin(cmd_t *cmd)
 {
-		if (!ft_strncmp(cmd->pathname, "cd", 2))
+		if (!ft_strncmp(cmd->pathname, "cd", 2)) //&&strelen(pathname == 2)
 			cd(cmd);
 		else if (!ft_strncmp(cmd->pathname, "pwd", 3))
 			pwd();
@@ -120,7 +120,10 @@ int	funk(cmd_t *cmd, var_t *var)
 
 	while (cmd)
 	{
-		pid = fork();
+		if (var->count > 1)
+			pid = fork();
+		else
+			pid = 0;
 		if (pid == -1)
 			perror("\e[1;31mfork\e[0;0m");
 		else if (pid == 0)
@@ -135,7 +138,8 @@ int	funk(cmd_t *cmd, var_t *var)
 				close(cmd->fd[0]);
 			if (cmd->fd[1] > 1)
 				close(cmd->fd[1]);
-			exit(0);
+			if (var->count > 1)
+				exit(0);
 		}
 		cmd = del_cmd(cmd, var);
 	}

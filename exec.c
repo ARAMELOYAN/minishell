@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 16:16:45 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/01/22 15:36:45 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/01/22 16:49:31 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,8 @@ int exec(cmd_t *cmd)
 	//command not foundo
 	if (fork() == 0)
 	{
-		execve(cmd->arg[0], cmd->arg, NULL);
+		if (!access(cmd->arg[0], X_OK))
+			execve(cmd->arg[0], cmd->arg, NULL);
 		var.path_split = ft_split(getenv("PATH"), ':');
 		var.iter_i = 0;
 		while (var.path_split[var.iter_i])
@@ -56,6 +57,7 @@ int exec(cmd_t *cmd)
 			closedir(var.directory);
 			var.iter_i++;
 		}
+		exit(0);
 	}
 	else
 		wait(0);
