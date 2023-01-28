@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/01/22 14:09:27 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/01/28 16:32:39 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@
 # include <string.h>
 # include <errno.h>
 # include <stdio.h>
+# include <fcntl.h>
 # include <term.h>
 
 extern char	**environ;
@@ -35,6 +36,8 @@ typedef struct	cmd
 {
 	char		*pathname;
 	char		**arg;
+	char		**hd;
+	char		**infile;
 	int			fd[2];
 	struct cmd	*next;
 }	cmd_t;
@@ -44,13 +47,17 @@ typedef struct var
 	DIR			*directory;
 	char 		**ex_inp_spl;
 	char 		**path_split;
-	char		buffer[200];
 	char 		*env_line;
 	char		*cmd_path;
 	char 		*cmd_path_1;
-	int			count;
+	char 		*ptr;
+	char 		*file;
+	char 		*file_1;
+	char		buffer[200];
 	int			iter_i;
 	int			iter_j;
+	int			count;
+	int			fd;
 }	var_t;
 
 struct dirent	*entity;
