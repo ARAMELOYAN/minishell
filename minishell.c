@@ -31,7 +31,10 @@ int my_open(cmd_t *cmd, char *str, int i, char *motiv)
 		*var.ptr = '\0';
 		var.file = ft_strtrim(var.file_1, " \t\v\n");
 		free(var.file_1);
-		var.fd = open(var.file, O_RDWR | O_CREAT, 0644);
+		if (i == 0)
+			var.fd = open(var.file, O_RDWR | O_CREAT | O_TRUNC, 0644);
+		else
+			var.fd = open(var.file, O_RDWR | O_CREAT | O_APPEND, 0644);
 		free(var.file);
 		if (var.fd == -1)
 			return (1);
@@ -39,10 +42,6 @@ int my_open(cmd_t *cmd, char *str, int i, char *motiv)
 			cmd->fd[1] = var.fd;
 		else
 			cmd->fd[0] = var.fd;
-		if (i == 0)
-			return (0);
-		while(read(var.fd, var.buffer, 1))
-			;
 		return (0);
 	}
 }
@@ -99,9 +98,7 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 		cmd->next = cmd_1;
 		cmd_1->fd[0] = fd[0];
 	}
-	printf("%s\n", str);
 	parse_str(cmd_1, str, "output", '>');
-	printf("%s\n", str);
 	cmd_1->arg = ft_split(str, ' ');
 	return (cmd_1);
 }
@@ -192,33 +189,47 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 	return (1);
 }
 
+void	run(cmd_t *cmd, var_t *var)
+{
+	if (dup2(cmd->fd[1], 1) == -1)
+		perror("\e[1;31mdup1\e[0;0m");
+	if (dup2(cmd->fd[0], 0) == -1)
+		perror("\e[1;31mdup2\e[0;0m");
+	if (!buildin(cmd) && !exec(cmd))
+		perror("\e[1;31mCommand not found\e[0;0m");
+	if (cmd->fd[0])
+		close(cmd->fd[0]);
+	if (cmd->fd[1] > 1)
+		close(cmd->fd[1]);
+	dup2(var->fd_input, 0);
+	dup2(var->fd_output, 1);
+}
+
 int	funk(cmd_t *cmd, var_t *var)
 {
 	int	pid;
 
+	var->fd_input = dup(0);
+	if (var->fd_input == -1)
+		perror("ERROR!");
+	var->fd_output= dup(1);
+	if (var->fd_output == -1)
+		perror("ERROR!1");
 	while (cmd)
 	{
 		if (var->count > 1)
-			pid = fork();
-		else
-			pid = 0;
-		if (pid == -1)
-			perror("\e[1;31mfork\e[0;0m");
-		else if (pid == 0)
 		{
-			if (dup2(cmd->fd[1], 1) == -1)
-				perror("\e[1;31mdup2\e[0;0m");
-			if (dup2(cmd->fd[0], 0) == -1)
-				perror("\e[1;31mdup2\e[0;0m");
-			if (!buildin(cmd) && !exec(cmd))
-				perror("\e[1;31mCommand not found\e[0;0m");
-			if (cmd->fd[0])
-				close(cmd->fd[0]);
-			if (cmd->fd[1] > 1)
-				close(cmd->fd[1]);
-			if (var->count > 1)
+			pid = fork();
+			if (pid == -1)
+				perror("\e[1;31mfork\e[0;0m");
+			else if (pid == 0)
+			{
+				run(cmd, var);
 				exit(0);
+			}
 		}
+		else
+			run(cmd, var);
 		cmd = del_cmd(cmd, var);
 	}
 }
@@ -236,13 +247,13 @@ int main()
 		ch = readline("minishell$ ");
 		if (!ch)
 			continue ;
+		add_history(ch);
 		if (!check_serror(ch, &cmd, var))
 		{
 			perror(strerror(errno));
 			free(ch);
 			continue ;
 		}
-		add_history(ch);
 		funk(cmd, var);
 		while (var->count--)
 			wait(NULL);

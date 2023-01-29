@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/01/28 16:32:39 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/01/29 12:46:57 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,8 @@ typedef struct var
 	int			iter_j;
 	int			count;
 	int			fd;
+	int			fd_input;
+	int			fd_output;
 }	var_t;
 
 struct dirent	*entity;
