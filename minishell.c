@@ -39,9 +39,17 @@ int my_open(cmd_t *cmd, char *str, int i, char *motiv)
 		if (var.fd == -1)
 			return (1);
 		if (!ft_strncmp(motiv, "output", 6))
+		{
+			if (cmd->fd[1] > 1)
+				close(cmd->fd[1]);
 			cmd->fd[1] = var.fd;
-		else
+		}
+		else if (!ft_strncmp(motiv, "input", 6))
+		{
+			if (cmd->fd[0] > 0)
+				close(cmd->fd[0]);
 			cmd->fd[0] = var.fd;
+		}
 		return (0);
 	}
 }
@@ -94,11 +102,18 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 	{
 		if (pipe(fd) == -1)
 			perror(0);
-		cmd->fd[1] = fd[1];
+		if (cmd->fd[1] == 1)
+			cmd->fd[1] = fd[1];
+		else
+			close(fd[1]);
 		cmd->next = cmd_1;
-		cmd_1->fd[0] = fd[0];
+		if (cmd->fd[0] == 0)
+			cmd->fd[0] = fd[0];
+		else
+			close(fd[0]);
 	}
 	parse_str(cmd_1, str, "output", '>');
+	parse_str(cmd_1, str, "input", '<');
 	cmd_1->arg = ft_split(str, ' ');
 	return (cmd_1);
 }
@@ -195,14 +210,12 @@ void	run(cmd_t *cmd, var_t *var)
 		perror("\e[1;31mdup1\e[0;0m");
 	if (dup2(cmd->fd[0], 0) == -1)
 		perror("\e[1;31mdup2\e[0;0m");
-	if (!buildin(cmd) && !exec(cmd))
-		perror("\e[1;31mCommand not found\e[0;0m");
 	if (cmd->fd[0])
 		close(cmd->fd[0]);
 	if (cmd->fd[1] > 1)
 		close(cmd->fd[1]);
-	dup2(var->fd_input, 0);
-	dup2(var->fd_output, 1);
+	if (!buildin(cmd) && !exec(cmd))
+		perror("\e[1;31mCommand not found\e[0;0m");
 }
 
 int	funk(cmd_t *cmd, var_t *var)
@@ -230,6 +243,10 @@ int	funk(cmd_t *cmd, var_t *var)
 		}
 		else
 			run(cmd, var);
+	dup2(var->fd_input, 0);
+	dup2(var->fd_output, 1);
+	close(var->fd_input);
+	close(var->fd_output);
 		cmd = del_cmd(cmd, var);
 	}
 }
