@@ -18,6 +18,36 @@ char	*next_special(char *str)
 	return (str);
 }
 
+int	redir_input(cmd_t *cmd, var_t var, int i)
+{
+	if (i == 0)
+		var.fd = open(var.file, O_RDONLY);
+	else
+		var.fd = open(var.file, O_RDONLY);
+	free(var.file);
+	if (var.fd == -1)
+		return (1);
+	if (cmd->fd[0] > 0)
+		close(cmd->fd[0]);
+	cmd->fd[0] = var.fd;
+	return (0);
+}
+
+int	redir_output(cmd_t *cmd, var_t var, int i)
+{
+	if (i == 0)
+		var.fd = open(var.file, O_RDWR | O_CREAT | O_TRUNC, 0644);
+	else
+		var.fd = open(var.file, O_RDWR | O_CREAT | O_APPEND, 0644);
+	free(var.file);
+	if (var.fd == -1)
+		return (1);
+	if (cmd->fd[1] > 1)
+		close(cmd->fd[1]);
+	cmd->fd[1] = var.fd;
+	return (0);
+}
+
 int my_open(cmd_t *cmd, char *str, int i, char *motiv)
 {
 	var_t	var;
@@ -31,25 +61,10 @@ int my_open(cmd_t *cmd, char *str, int i, char *motiv)
 		*var.ptr = '\0';
 		var.file = ft_strtrim(var.file_1, " \t\v\n");
 		free(var.file_1);
-		if (i == 0)
-			var.fd = open(var.file, O_RDWR | O_CREAT | O_TRUNC, 0644);
-		else
-			var.fd = open(var.file, O_RDWR | O_CREAT | O_APPEND, 0644);
-		free(var.file);
-		if (var.fd == -1)
-			return (1);
 		if (!ft_strncmp(motiv, "output", 6))
-		{
-			if (cmd->fd[1] > 1)
-				close(cmd->fd[1]);
-			cmd->fd[1] = var.fd;
-		}
+			return (redir_output(cmd, var, i));
 		else if (!ft_strncmp(motiv, "input", 6))
-		{
-			if (cmd->fd[0] > 0)
-				close(cmd->fd[0]);
-			cmd->fd[0] = var.fd;
-		}
+			return (redir_input(cmd, var, i));
 		return (0);
 	}
 }
