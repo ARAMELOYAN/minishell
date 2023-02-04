@@ -121,10 +121,26 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 	}
 }
 
+void	my_pipe(cmd_t *cmd, cmd_t *cmd_1)
+{
+	int		fd[2];
+
+	if (pipe(fd) == -1)
+		perror(0);
+	if (cmd->fd[1] == 1)
+		cmd->fd[1] = fd[1];
+	else
+		close(fd[1]);
+	cmd->next = cmd_1;
+	if (cmd->fd[0] == 0)
+		cmd->fd[0] = fd[0];
+	else
+		close(fd[0]);
+}
+
 cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 {
 	cmd_t	*cmd_1;
-	int		fd[2];
 
 	if (!str || !*str)
 		return (NULL);
@@ -136,19 +152,7 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 	cmd_1->fd[0] = 0;
 	cmd_1->fd[1] = 1;
 	if (cmd)
-	{
-		if (pipe(fd) == -1)
-			perror(0);
-		if (cmd->fd[1] == 1)
-			cmd->fd[1] = fd[1];
-		else
-			close(fd[1]);
-		cmd->next = cmd_1;
-		if (cmd->fd[0] == 0)
-			cmd->fd[0] = fd[0];
-		else
-			close(fd[0]);
-	}
+		my_pipe(cmd, cmd_1);
 	parse_str(cmd_1, str, "output", '>');
 	parse_str(cmd_1, str, "input", '<');
 	cmd_1->arg = ft_split(str, ' ');
