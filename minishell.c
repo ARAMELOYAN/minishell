@@ -18,33 +18,55 @@ char	*next_special(char *str)
 	return (str);
 }
 
-int	redir_input(cmd_t *cmd, var_t var, int i)
+int	heredoc(cmd_t *cmd, var_t *var)
 {
-	if (i == 0)
-		var.fd = open(var.file, O_RDONLY);
-	else
-		var.fd = open(var.file, O_RDONLY);
-	free(var.file);
-	if (var.fd == -1)
-		return (1);
-	if (cmd->fd[0] > 0)
-		close(cmd->fd[0]);
-	cmd->fd[0] = var.fd;
+	char 	*ch;
+
+	var->fd = open(".heredoc", O_WRONLY| O_CREAT | O_TRUNC, 0644);
+	while (1)
+	{
+		ch = readline("heredoc> ");
+		if (!ft_strncmp(ch, var->file, ft_strlen(ch))
+				&& ft_strlen(ch) == ft_strlen(var->file))
+			break;
+		write(var->fd, ch, ft_strlen(ch));
+		write(var->fd, "\n", 1);
+		free(ch);
+	}
+	free(ch);
+	close(var->fd);
+	var->fd = open(".heredoc", O_RDONLY);
+	cmd->hd = 1;
 	return (0);
 }
 
-int	redir_output(cmd_t *cmd, var_t var, int i)
+int	redir_input(cmd_t *cmd, var_t *var, int i)
 {
 	if (i == 0)
-		var.fd = open(var.file, O_RDWR | O_CREAT | O_TRUNC, 0644);
+		var->fd = open(var->file, O_RDONLY);
 	else
-		var.fd = open(var.file, O_RDWR | O_CREAT | O_APPEND, 0644);
-	free(var.file);
-	if (var.fd == -1)
+		heredoc(cmd, var);
+	free(var->file);
+	if (var->fd == -1)
+		return (1);
+	if (cmd->fd[0] > 0)
+		close(cmd->fd[0]);
+	cmd->fd[0] = var->fd;
+	return (0);
+}
+
+int	redir_output(cmd_t *cmd, var_t *var, int i)
+{
+	if (i == 0)
+		var->fd = open(var->file, O_RDWR | O_CREAT | O_TRUNC, 0644);
+	else
+		var->fd = open(var->file, O_RDWR | O_CREAT | O_APPEND, 0644);
+	free(var->file);
+	if (var->fd == -1)
 		return (1);
 	if (cmd->fd[1] > 1)
 		close(cmd->fd[1]);
-	cmd->fd[1] = var.fd;
+	cmd->fd[1] = var->fd;
 	return (0);
 }
 
@@ -62,9 +84,9 @@ int my_open(cmd_t *cmd, char *str, int i, char *motiv)
 		var.file = ft_strtrim(var.file_1, " \t\v\n");
 		free(var.file_1);
 		if (!ft_strncmp(motiv, "output", 6))
-			return (redir_output(cmd, var, i));
+			return (redir_output(cmd, &var, i));
 		else if (!ft_strncmp(motiv, "input", 6))
-			return (redir_input(cmd, var, i));
+			return (redir_input(cmd, &var, i));
 		return (0);
 	}
 }
@@ -133,14 +155,35 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 	return (cmd_1);
 }
 
+void	del_heredoc()
+{
+	char *arg[3];
+
+	arg[0] = ft_strdup("rm");
+	arg[1] = ft_strdup(".heredoc");
+	arg[2] = NULL;
+	if (fork() == 0)
+	{
+		if (execve("/bin/rm", arg, NULL) == -1)
+			perror(0);
+		exit(0);
+	}
+	wait(0);
+	free(arg[0]);
+	free(arg[1]);
+}
+
 cmd_t	*del_cmd(cmd_t *cmd, var_t *var)
 {
 	cmd_t	*cmd_1;
+	cmd_t	*cmd_2;
 
 	if (cmd->fd[0])
 		close(cmd->fd[0]);
 	if (cmd->fd[1] > 1)
 		close(cmd->fd[1]);
+	if (cmd->hd)
+		del_heredoc();
 	cmd_1 = cmd->next;
 	var->iter_i = 0;
 	while (cmd->arg[var->iter_i])

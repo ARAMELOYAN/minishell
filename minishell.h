@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/01/29 16:42:35 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/04 13:03:36 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,9 +35,9 @@ extern char	**environ;
 typedef struct	cmd
 {
 	char		**arg;
-	char		**hd;
 	char		**infile;
 	int			fd[2];
+	int			hd;
 	struct cmd	*next;
 }	cmd_t;
 
