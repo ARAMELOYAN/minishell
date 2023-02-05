@@ -4,7 +4,7 @@ int	special(char *ch)
 {
 	if (*ch == '|' || *ch == '&' || *ch == ';' || *ch == '<' || *ch == '>'
 			|| *ch == '(' || *ch == ')' || *ch == '$' || *ch == '`'
-			|| *ch == '"' || *ch == '\0')
+			|| *ch == '"' || *ch == '\0' || *ch == '`')
 		return (1);
 	return (0);
 }
@@ -147,6 +147,7 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 	var->count++;
 	cmd_1 = (cmd_t *)malloc(sizeof(cmd_t));
 	cmd_1->next = NULL;
+	cmd_1->hd = 0;
 	while (cmd && cmd->next)
 		cmd = cmd->next;
 	cmd_1->fd[0] = 0;
@@ -159,10 +160,11 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 	return (cmd_1);
 }
 
-void	del_heredoc()
+void	del_heredoc(cmd_t *cmd)
 {
 	char *arg[3];
 
+	cmd->hd = 0;
 	arg[0] = ft_strdup("rm");
 	arg[1] = ft_strdup(".heredoc");
 	arg[2] = NULL;
@@ -180,14 +182,13 @@ void	del_heredoc()
 cmd_t	*del_cmd(cmd_t *cmd, var_t *var)
 {
 	cmd_t	*cmd_1;
-	cmd_t	*cmd_2;
 
 	if (cmd->fd[0])
 		close(cmd->fd[0]);
 	if (cmd->fd[1] > 1)
 		close(cmd->fd[1]);
 	if (cmd->hd)
-		del_heredoc();
+		del_heredoc(cmd);
 	cmd_1 = cmd->next;
 	var->iter_i = 0;
 	while (cmd->arg[var->iter_i])
@@ -216,19 +217,19 @@ void	sig(void)
 
 int	buildin(cmd_t *cmd)
 {
-		if (!ft_strncmp(cmd->arg[0], "cd", 2)) //&&strelen(pathname == 2)
+		if (!ft_strncmp(cmd->arg[0], "cd", 2) && !cmd->arg[0][2])
 			cd(cmd);
-		else if (!ft_strncmp(cmd->arg[0], "pwd", 3))
+		else if (!ft_strncmp(cmd->arg[0], "pwd", 3) && !cmd->arg[0][3])
 			pwd();
-		else if (!ft_strncmp(cmd->arg[0], "echo", 4))
+		else if (!ft_strncmp(cmd->arg[0], "echo", 4) && !cmd->arg[0][4])
 			echom(cmd);
-		else if (!ft_strncmp(cmd->arg[0], "env", 3))
+		else if (!ft_strncmp(cmd->arg[0], "env", 3) && !cmd->arg[0][3])
 			env();
-		else if (!ft_strncmp(cmd->arg[0], "export", 6))
+		else if (!ft_strncmp(cmd->arg[0], "export", 6) && !cmd->arg[0][6])
 			export(cmd);
-		else if (!ft_strncmp(cmd->arg[0], "unset", 5))
+		else if (!ft_strncmp(cmd->arg[0], "unset", 5) && !cmd->arg[0][5])
 			unset(cmd);
-		else if (!ft_strncmp(cmd->arg[0], "exit", 4))
+		else if (!ft_strncmp(cmd->arg[0], "exit", 4) && !cmd->arg[0][4])
 			exitm(cmd);
 		else
 			return (0);

@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/01/22 14:10:34 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/05 12:17:24 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ void	pwd()
 	printf("%s\n", getcwd(var.buffer, 200));
 }
 
-void	maneur(void)
+void	manevr(void)
 {
 	cmd_t	*cmd_1;
 	var_t	var;
@@ -89,14 +89,14 @@ int cd(cmd_t *cmd)
 			perror(0);
 		}
 		else
-			maneur();
+			manevr();
 	}
 	else
 	{
 		if (chdir(*(cmd->arg)) == -1)
 			perror(strerror(errno));
 		else
-			maneur();
+			manevr();
 	}
 	return (0);
 }
