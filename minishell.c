@@ -237,6 +237,22 @@ int	buildin(cmd_t *cmd)
 }
 
 //char *check_quote(char *s);veradarcnelu e ayn | i hascen vor@ chi gtnvum "" kam '' mej
+/*
+char	*check_quote(char *s)
+{
+	char	*ptr;
+	char	*ptr_1;
+	char	*ptr_2;
+
+	ptr_1 = ft_strchr(s, '"');
+	if (!ptr_1)
+		return (ft_strchr(s, '|'));
+	ptr_2 = ft_strchr(ptr_1, '"');
+	if (!ptr_2)
+		perror("syntacs error");
+	ptr = ft_strchr(s, '|');
+}
+*/
 int	check_serror(char *s, cmd_t **cmd, var_t *var)
 {
 	char	*dst;
