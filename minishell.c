@@ -216,7 +216,7 @@ void	sig(void)
 }
 
 int	buildin(cmd_t *cmd)
-{
+{//popoxel aynpes vor execven ashxatacni bildinnern
 		if (!ft_strncmp(cmd->arg[0], "cd", 2) && !cmd->arg[0][2])
 			cd(cmd);
 		else if (!ft_strncmp(cmd->arg[0], "pwd", 3) && !cmd->arg[0][3])
@@ -236,6 +236,7 @@ int	buildin(cmd_t *cmd)
 		return (1);
 }
 
+//char *check_quote(char *s);veradarcnelu e ayn | i hascen vor@ chi gtnvum "" kam '' mej
 int	check_serror(char *s, cmd_t **cmd, var_t *var)
 {
 	char	*dst;
@@ -243,6 +244,7 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 
 	*cmd = NULL;
 	var->count = 0;
+	//ptr = chech_quote(s);
 	ptr = ft_strchr(s, '|');
 	while(ptr)
 	{
