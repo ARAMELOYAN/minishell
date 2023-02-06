@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/04 13:03:36 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/06 13:37:10 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,13 @@ typedef struct	cmd
 	struct cmd	*next;
 }	cmd_t;
 
-typedef struct var
+typedef struct	quote
+{
+	char	*start;
+	char	*end;
+}	quote_t;
+
+typedef struct	var
 {
 	DIR			*directory;
 	char 		**ex_inp_spl;

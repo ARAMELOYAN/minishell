@@ -1,10 +1,22 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   minishell.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
+/*   Updated: 2023/02/06 18:58:05 by aeloyan          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 int	special(char *ch)
 {
 	if (*ch == '|' || *ch == '&' || *ch == ';' || *ch == '<' || *ch == '>'
 			|| *ch == '(' || *ch == ')' || *ch == '$' || *ch == '`'
-			|| *ch == '"' || *ch == '\0' || *ch == '`')
+			|| *ch == '"' || *ch == '\0' || *ch == '\'')
 		return (1);
 	return (0);
 }
@@ -236,8 +248,8 @@ int	buildin(cmd_t *cmd)
 		return (1);
 }
 
-//char *check_quote(char *s);veradarcnelu e ayn | i hascen vor@ chi gtnvum "" kam '' mej
 /*
+char *check_quote(char *s);veradarcnelu e ayn | i hascen vor@ chi gtnvum "" kam '' mej
 char	*check_quote(char *s)
 {
 	char	*ptr;
@@ -249,19 +261,65 @@ char	*check_quote(char *s)
 		return (ft_strchr(s, '|'));
 	ptr_2 = ft_strchr(ptr_1, '"');
 	if (!ptr_2)
-		perror("syntacs error");
+		perror("syntax error");
 	ptr = ft_strchr(s, '|');
 }
 */
+
+quote_t *get_quote(char *ptr)
+{
+	quote_t	*quote;
+
+	if (!ptr)
+		return (-2);
+	quote = (quote_t *)malloc(sizeof(quote_t));
+	if (!quote)
+		return (-1);
+	quote->start = ft_strchr(ptr, '\'');
+	quote->end = ft_strchr(ptr, '"');
+	if ((!quote->start && !quote->end) || quote->start == ptr || quote->end == ptr)
+	{
+		free(quote);
+		return (0);
+	}
+	if (quote->start && (quote->start < quote->end || !quote->end))
+		quote->end = ft_strchr(quote->start + 1, '\'');
+	else
+	{
+		quote->start = quote->end;
+		quote->end = ft_strchr(quote->start + 1, '"');
+	}
+	if (!quote->end)
+		return (-1);
+	return (quote);
+}
+
 int	check_serror(char *s, cmd_t **cmd, var_t *var)
 {
 	char	*dst;
 	char	*ptr;
+	quote_t	*quote;
+	quote_t	*quote_temp;
 
 	*cmd = NULL;
 	var->count = 0;
-	//ptr = chech_quote(s);
 	ptr = ft_strchr(s, '|');
+	quote = get_quote(s);
+	if (quote == -1)
+		return (0);
+	else if (quote > 0)
+	{
+		while (ptr && ptr > quote->start && ptr < quote->end)
+		{
+			ptr = ft_strchr(ptr, '|');
+			if (ptr > quote->end)
+			{
+				quote_temp = quote;
+				quote = get_quote(quote->end + 1);
+				free(quote_temp);
+			}
+		}
+	}
 	while(ptr)
 	{
 		if (ptr == s || *(++ptr) == '|')//syntax
