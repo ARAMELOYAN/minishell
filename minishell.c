@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/06 18:58:05 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/02/07 18:08:20 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,6 +150,50 @@ void	my_pipe(cmd_t *cmd, cmd_t *cmd_1)
 		close(fd[0]);
 }
 
+quote_t	*get_quote(char *ptr)
+{
+	quote_t	*quote;
+
+	if (!ptr)
+		return (-2);
+	quote = (quote_t *)malloc(sizeof(quote_t));
+	if (!quote)
+		return (-1);
+	quote->start = ft_strchr(ptr, '\'');
+	quote->end = ft_strchr(ptr, '"');
+	if ((!quote->start && !quote->end))
+	{
+		free(quote);
+		return (0);
+	}
+	if (quote->start && (quote->start < quote->end || !quote->end))
+		quote->end = ft_strchr(quote->start + 1, '\'');
+	else
+	{
+		quote->start = quote->end;
+		quote->end = ft_strchr(quote->start + 1, '"');
+	}
+	if (!quote->end)
+		return (-1);
+	return (quote);
+}
+
+void	clear_quote(char *arg)
+{
+	quote_t	 *quote;
+	quote_t	 *quote_1;
+
+		quote = get_quote(arg);
+		while (quote)
+		{
+			ft_memmove(quote->start, quote->start + 1, ft_strlen(quote->start));
+			ft_memmove(quote->end - 1, quote->end, ft_strlen(quote->end) + 1);
+			quote_1 = quote;
+			quote = get_quote(quote->end - 1);
+			free(quote_1);
+		}
+}
+
 cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 {
 	cmd_t	*cmd_1;
@@ -168,6 +212,7 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 		my_pipe(cmd, cmd_1);
 	parse_str(cmd_1, str, "output", '>');
 	parse_str(cmd_1, str, "input", '<');
+	clear_quote(str);
 	cmd_1->arg = ft_split(str, ' ');
 	return (cmd_1);
 }
@@ -202,6 +247,7 @@ cmd_t	*del_cmd(cmd_t *cmd, var_t *var)
 	if (cmd->hd)
 		del_heredoc(cmd);
 	cmd_1 = cmd->next;
+	printf("del_cmd\n");
 	var->iter_i = 0;
 	while (cmd->arg[var->iter_i])
 		free(cmd->arg[var->iter_i++]);
@@ -248,52 +294,6 @@ int	buildin(cmd_t *cmd)
 		return (1);
 }
 
-/*
-char *check_quote(char *s);veradarcnelu e ayn | i hascen vor@ chi gtnvum "" kam '' mej
-char	*check_quote(char *s)
-{
-	char	*ptr;
-	char	*ptr_1;
-	char	*ptr_2;
-
-	ptr_1 = ft_strchr(s, '"');
-	if (!ptr_1)
-		return (ft_strchr(s, '|'));
-	ptr_2 = ft_strchr(ptr_1, '"');
-	if (!ptr_2)
-		perror("syntax error");
-	ptr = ft_strchr(s, '|');
-}
-*/
-
-quote_t *get_quote(char *ptr)
-{
-	quote_t	*quote;
-
-	if (!ptr)
-		return (-2);
-	quote = (quote_t *)malloc(sizeof(quote_t));
-	if (!quote)
-		return (-1);
-	quote->start = ft_strchr(ptr, '\'');
-	quote->end = ft_strchr(ptr, '"');
-	if ((!quote->start && !quote->end) || quote->start == ptr || quote->end == ptr)
-	{
-		free(quote);
-		return (0);
-	}
-	if (quote->start && (quote->start < quote->end || !quote->end))
-		quote->end = ft_strchr(quote->start + 1, '\'');
-	else
-	{
-		quote->start = quote->end;
-		quote->end = ft_strchr(quote->start + 1, '"');
-	}
-	if (!quote->end)
-		return (-1);
-	return (quote);
-}
-
 int	check_serror(char *s, cmd_t **cmd, var_t *var)
 {
 	char	*dst;
@@ -311,7 +311,7 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 	{
 		while (ptr && ptr > quote->start && ptr < quote->end)
 		{
-			ptr = ft_strchr(ptr, '|');
+			ptr = ft_strchr(ptr + 1, '|');
 			if (ptr > quote->end)
 			{
 				quote_temp = quote;
