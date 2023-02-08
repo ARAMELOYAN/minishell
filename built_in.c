@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/07 17:57:27 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/08 16:20:38 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ void	manevr(void)
 	cmd_1->arg[3] = NULL;
 	cmd_1->next = NULL;
 	export(cmd_1);
-	del_cmd(cmd_1);
+	del_cmd(cmd_1, &var);
 }
 
 int cd(cmd_t *cmd)
@@ -144,6 +144,14 @@ void exitm(cmd_t *cmd)
 {
 	printf("exit\n");
 	if (cmd->arg[1])
+	{
+		if (cmd->arg[2])
+		{
+			write(2, "msh: exit: too many arguments\n", 30);
+			errno = 1;
+			return ;
+		}
 		exit(ft_atoi(cmd->arg[1]));
+	}
 	exit(0);
 }

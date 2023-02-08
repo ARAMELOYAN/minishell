@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/07 18:08:20 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/08 16:27:07 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,7 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 		}
 		else
 			my_open(cmd, var.ptr, 0, motiv);//depq: ls > file
-		var.ptr = ft_strchr(str, ch);
+		var.ptr = ft_strchr(str, ch);	
 	}
 }
 
@@ -247,7 +247,6 @@ cmd_t	*del_cmd(cmd_t *cmd, var_t *var)
 	if (cmd->hd)
 		del_heredoc(cmd);
 	cmd_1 = cmd->next;
-	printf("del_cmd\n");
 	var->iter_i = 0;
 	while (cmd->arg[var->iter_i])
 		free(cmd->arg[var->iter_i++]);
