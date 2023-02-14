@@ -6,19 +6,16 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/08 16:20:38 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/14 18:44:01 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	unset(cmd_t *cmd)
+void	unset(cmd_t *cmd, char **envp)
 {
-	char	**envp;
-
 	while (*(++cmd->arg))
 	{
-		envp = environ;
 		while (*envp)
 		{
 			if (!ft_strncmp(*envp, *cmd->arg, ft_strchr(*envp, '=') - *envp))
@@ -33,13 +30,10 @@ void	unset(cmd_t *cmd)
 	}
 }
 
-void	export(cmd_t *cmd)
+void	export(cmd_t *cmd, char **envp)
 {
-	char	**envp;
-
 	while (*(++cmd->arg))
 	{
-	envp = environ;
 		while (*envp)
 		{
 			if (!ft_strncmp(*envp, *cmd->arg, ft_strchr(*cmd->arg, '=') - *cmd->arg + 1))
@@ -64,7 +58,7 @@ void	pwd()
 	printf("%s\n", getcwd(var.buffer, 200));
 }
 
-void	manevr(void)
+void	manevr(char **envp)
 {
 	cmd_t	*cmd_1;
 	var_t	var;
@@ -75,28 +69,29 @@ void	manevr(void)
 	cmd_1->arg[1] = ft_strjoin("OLDPWD=", getenv("PWD"));
 	cmd_1->arg[2] = ft_strjoin("PWD=", getcwd(var.buffer, 200));
 	cmd_1->arg[3] = NULL;
+	cmd_1->hd = 0;
 	cmd_1->next = NULL;
-	export(cmd_1);
+	export(cmd_1, envp);
 	del_cmd(cmd_1, &var);
 }
 
-int cd(cmd_t *cmd)
+int cd(cmd_t *cmd, char **envp)
 {
 	if (!*(++cmd->arg))
 	{
 		if (!getenv("HOME") || chdir(getenv("HOME")) == -1)
 		{
-			perror(0);
+			perror("msh: cd");
 		}
 		else
-			manevr();
+			manevr(envp);
 	}
 	else
 	{
 		if (chdir(*(cmd->arg)) == -1)
 			perror(strerror(errno));
 		else
-			manevr();
+			manevr(envp);
 	}
 	return (0);
 }
@@ -131,13 +126,10 @@ void echom(cmd_t *cmd)
 	}
 }
 
-void	env()
+void	env(char **envp)
 {
-	var_t	var;
-
-	var.iter_i = 0;
-	while (environ[var.iter_i])
-		printf("%s\n", environ[var.iter_i++]);
+	while (*envp)
+		printf("%s\n", *envp++);
 }
 
 void exitm(cmd_t *cmd)

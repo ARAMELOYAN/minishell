@@ -6,13 +6,13 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 16:16:45 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/01/26 15:19:12 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/14 18:48:50 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int exec(cmd_t *cmd)
+int exec(cmd_t *cmd, char **envp)
 {
 	var_t	var;
 
@@ -20,7 +20,7 @@ int exec(cmd_t *cmd)
 	if (fork() == 0)
 	{
 		if (!access(cmd->arg[0], X_OK))
-			execve(cmd->arg[0], cmd->arg, NULL);
+			execve(cmd->arg[0], cmd->arg, envp);
 		var.path_split = ft_split(getenv("PATH"), ':');
 		var.iter_i = 0;
 		while (var.path_split[var.iter_i])
@@ -45,7 +45,7 @@ int exec(cmd_t *cmd)
 					var.cmd_path = ft_strjoin(var.path_split[var.iter_i], "/");
 					var.cmd_path_1 = ft_strjoin(var.cmd_path, entity->d_name);
 					free(var.cmd_path);
-					if (execve(var.cmd_path_1, cmd->arg, NULL) == -1)
+					if (execve(var.cmd_path_1, cmd->arg, envp) == -1)
 					{
 						perror(0);
 						return (errno);

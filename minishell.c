@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/08 16:27:07 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/14 17:51:12 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -272,20 +272,20 @@ void	sig(void)
 	signal(SIGHUP, handler);
 }
 
-int	buildin(cmd_t *cmd)
+int	buildin(cmd_t *cmd, char **envp)
 {//popoxel aynpes vor execven ashxatacni bildinnern
 		if (!ft_strncmp(cmd->arg[0], "cd", 2) && !cmd->arg[0][2])
-			cd(cmd);
+			cd(cmd, envp);
 		else if (!ft_strncmp(cmd->arg[0], "pwd", 3) && !cmd->arg[0][3])
 			pwd();
 		else if (!ft_strncmp(cmd->arg[0], "echo", 4) && !cmd->arg[0][4])
 			echom(cmd);
 		else if (!ft_strncmp(cmd->arg[0], "env", 3) && !cmd->arg[0][3])
-			env();
+			env(envp);
 		else if (!ft_strncmp(cmd->arg[0], "export", 6) && !cmd->arg[0][6])
-			export(cmd);
+			export(cmd, envp);
 		else if (!ft_strncmp(cmd->arg[0], "unset", 5) && !cmd->arg[0][5])
-			unset(cmd);
+			unset(cmd, envp);
 		else if (!ft_strncmp(cmd->arg[0], "exit", 4) && !cmd->arg[0][4])
 			exitm(cmd);
 		else
@@ -342,7 +342,7 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 	return (1);
 }
 
-void	run(cmd_t *cmd, var_t *var)
+void	run(cmd_t *cmd, var_t *vari, char **envp)
 {
 	if (dup2(cmd->fd[1], 1) == -1)
 		perror("\e[1;31mdup1\e[0;0m");
@@ -352,11 +352,11 @@ void	run(cmd_t *cmd, var_t *var)
 		close(cmd->fd[0]);
 	if (cmd->fd[1] > 1)
 		close(cmd->fd[1]);
-	if (!buildin(cmd) && !exec(cmd))
+	if (!buildin(cmd, envp) && !exec(cmd, envp))
 		perror("\e[1;31mCommand not found\e[0;0m");
 }
 
-int	funk(cmd_t *cmd, var_t *var)
+int	funk(cmd_t *cmd, var_t *var, char **envp)
 {
 	int	pid;
 
@@ -375,12 +375,12 @@ int	funk(cmd_t *cmd, var_t *var)
 				perror("\e[1;31mfork\e[0;0m");
 			else if (pid == 0)
 			{
-				run(cmd, var);
+				run(cmd, var, envp);
 				exit(0);
 			}
 		}
 		else
-			run(cmd, var);
+			run(cmd, var, envp);
 	dup2(var->fd_input, 0);
 	dup2(var->fd_output, 1);
 	close(var->fd_input);
@@ -389,7 +389,7 @@ int	funk(cmd_t *cmd, var_t *var)
 	}
 }
 
-int main()
+int main(int ac, char **av, char **envp)
 {
 	char	*ch;
 	cmd_t	*cmd;
@@ -409,7 +409,7 @@ int main()
 			free(ch);
 			continue ;
 		}
-		funk(cmd, var);
+		funk(cmd, var, envp);
 		while (var->count--)
 			wait(NULL);
 		free(ch);
