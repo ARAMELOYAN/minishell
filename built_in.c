@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/14 18:44:01 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/02/15 14:57:31 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,13 +30,16 @@ void	unset(cmd_t *cmd, char **envp)
 	}
 }
 
-void	export(cmd_t *cmd, char **envp)
+void	export(cmd_t *cmd, char **envrp)
 {
+	char	**envp;
+
 	while (*(++cmd->arg))
 	{
+		envp = envrp;
 		while (*envp)
 		{
-			if (!ft_strncmp(*envp, *cmd->arg, ft_strchr(*cmd->arg, '=') - *cmd->arg + 1))
+			if (!ft_strncmp(*envp, *cmd->arg, ft_strchr(*cmd->arg, '=') - *cmd->arg))
 			{
 				*envp = ft_strdup(*cmd->arg);//jshtel, ardyoq petq e malloq unena aystegh
 				break ;
