@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/15 14:57:31 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/02/15 19:54:34 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,29 +103,33 @@ void echom(cmd_t *cmd)
 {
 	var_t	var;
 
-	var.iter_i = 0;
-	if (cmd->arg[1] && !ft_strncmp(cmd->arg[1], "-", 1))
-		while (cmd->arg[1][++var.iter_i])
-			if(ft_strncmp(cmd->arg[1] + var.iter_i, "n", 1))
-				break;
-	if (cmd->arg[1] && !cmd->arg[1][var.iter_i])
+	var.iter_j = 0;
+	while (cmd->arg[++var.iter_j] && !ft_strncmp(cmd->arg[var.iter_j], "-", 1))
 	{
-		var.iter_i = 2;
-		while (cmd->arg[var.iter_i] && printf("%s", cmd->arg[var.iter_i]))
-		{
-			if (cmd->arg[++var.iter_i])
-				printf(" ");
-		}
+		var.iter_i = 0;
+		while (cmd->arg[var.iter_j][++var.iter_i] &&
+				!ft_strncmp(cmd->arg[var.iter_j] + var.iter_i, "n", 1))
+		if(cmd->arg[var.iter_j][var.iter_i] != '\0')
+			break;
 	}
-	else
+	if (cmd->arg[var.iter_j] && cmd->arg[var.iter_j][var.iter_i] == '\0')
 	{
-		var.iter_i = 1;
-		while (cmd->arg[var.iter_i] && printf("%s", cmd->arg[var.iter_i]))
+		var.iter_j++;
+		printf("a;sdfh\n");
+		while (cmd->arg[var.iter_j] && printf("%s", cmd->arg[var.iter_j]))
 		{
-			if (cmd->arg[++var.iter_i])
+			if (cmd->arg[++var.iter_j])
 				printf(" ");
 		}
 		printf("\n");
+	}
+	else
+	{
+		while (cmd->arg[var.iter_j] && printf("%s", cmd->arg[var.iter_j]))
+		{
+			if (cmd->arg[++var.iter_j])
+				printf(" ");
+		}
 	}
 }
 
