@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/15 19:54:34 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/22 12:18:47 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,6 @@ void echom(cmd_t *cmd)
 	if (cmd->arg[var.iter_j] && cmd->arg[var.iter_j][var.iter_i] == '\0')
 	{
 		var.iter_j++;
-		printf("a;sdfh\n");
 		while (cmd->arg[var.iter_j] && printf("%s", cmd->arg[var.iter_j]))
 		{
 			if (cmd->arg[++var.iter_j])
@@ -141,9 +140,22 @@ void	env(char **envp)
 
 void exitm(cmd_t *cmd)
 {
+	var_t	var;
+
 	printf("exit\n");
 	if (cmd->arg[1])
 	{
+		var.iter_i = 0;
+		while (cmd->arg[1][var.iter_i])
+		{
+			if (!ft_isdigit(cmd->arg[1][var.iter_i]))
+			{
+				write(2, "msh: exit: ", 11);
+				write(2, cmd->arg[1], ft_strlen(cmd->arg[1]));
+				write(2, ": numeric argument required\n", 28);
+				exit(255);
+			}	
+		}
 		if (cmd->arg[2])
 		{
 			write(2, "msh: exit: too many arguments\n", 30);

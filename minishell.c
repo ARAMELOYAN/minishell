@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/14 17:51:12 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/02/22 14:35:27 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,8 +144,8 @@ void	my_pipe(cmd_t *cmd, cmd_t *cmd_1)
 	else
 		close(fd[1]);
 	cmd->next = cmd_1;
-	if (cmd->fd[0] == 0)
-		cmd->fd[0] = fd[0];
+	if (cmd_1->fd[0] == 0)
+		cmd_1->fd[0] = fd[0];
 	else
 		close(fd[0]);
 }
@@ -183,15 +183,15 @@ void	clear_quote(char *arg)
 	quote_t	 *quote;
 	quote_t	 *quote_1;
 
-		quote = get_quote(arg);
-		while (quote)
-		{
-			ft_memmove(quote->start, quote->start + 1, ft_strlen(quote->start));
-			ft_memmove(quote->end - 1, quote->end, ft_strlen(quote->end) + 1);
-			quote_1 = quote;
-			quote = get_quote(quote->end - 1);
-			free(quote_1);
-		}
+	quote = get_quote(arg);
+	while (quote)
+	{
+		ft_memmove(quote->start, quote->start + 1, ft_strlen(quote->start));
+		ft_memmove(quote->end - 1, quote->end, ft_strlen(quote->end) + 1);
+		quote_1 = quote;
+		quote = get_quote(quote->end - 1);
+		free(quote_1);
+	}
 }
 
 cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
@@ -345,9 +345,9 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 void	run(cmd_t *cmd, var_t *vari, char **envp)
 {
 	if (dup2(cmd->fd[1], 1) == -1)
-		perror("\e[1;31mdup1\e[0;0m");
+		perror("dup2");
 	if (dup2(cmd->fd[0], 0) == -1)
-		perror("\e[1;31mdup2\e[0;0m");
+		perror("dup2");
 	if (cmd->fd[0])
 		close(cmd->fd[0]);
 	if (cmd->fd[1] > 1)
@@ -362,17 +362,17 @@ int	funk(cmd_t *cmd, var_t *var, char **envp)
 
 	var->fd_input = dup(0);
 	if (var->fd_input == -1)
-		perror("ERROR!");
-	var->fd_output= dup(1);
+		perror("msh");
+	var->fd_output = dup(1);
 	if (var->fd_output == -1)
-		perror("ERROR!1");
+		perror("msh");
 	while (cmd)
 	{
 		if (var->count > 1)
 		{
 			pid = fork();
 			if (pid == -1)
-				perror("\e[1;31mfork\e[0;0m");
+				perror("msh");
 			else if (pid == 0)
 			{
 				run(cmd, var, envp);
@@ -399,7 +399,7 @@ int main(int ac, char **av, char **envp)
 	while (1)
 	{
 		//SHLVL++;
-		ch = readline("minishell$ ");
+		ch = readline("\e[0;32mminishell$\e[0;0m ");
 		if (!ch)
 			continue ;
 		add_history(ch);

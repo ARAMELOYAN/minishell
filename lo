@@ -1,0 +1,13 @@
+Makefile
+built_in.c
+built_in.o
+exec.c
+exec.o
+libft
+libft.a
+lo
+minishell
+minishell.c
+minishell.h
+minishell.o
+segfault
