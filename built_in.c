@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/22 12:18:47 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/23 18:46:08 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,25 +102,29 @@ int cd(cmd_t *cmd, char **envp)
 void echom(cmd_t *cmd)
 {
 	var_t	var;
+	int		nline;
 
+	var.iter_i = 0;
 	var.iter_j = 0;
+	nline = 1;
 	while (cmd->arg[++var.iter_j] && !ft_strncmp(cmd->arg[var.iter_j], "-", 1))
 	{
 		var.iter_i = 0;
 		while (cmd->arg[var.iter_j][++var.iter_i] &&
-				!ft_strncmp(cmd->arg[var.iter_j] + var.iter_i, "n", 1))
-		if(cmd->arg[var.iter_j][var.iter_i] != '\0')
+				cmd->arg[var.iter_j][var.iter_i] == 'n')
+			;
+		if (cmd->arg[var.iter_j][var.iter_i] != '\0')
 			break;
+		else
+			nline = 0;
 	}
-	if (cmd->arg[var.iter_j] && cmd->arg[var.iter_j][var.iter_i] == '\0')
+	if (cmd->arg[var.iter_j])
 	{
-		var.iter_j++;
 		while (cmd->arg[var.iter_j] && printf("%s", cmd->arg[var.iter_j]))
 		{
 			if (cmd->arg[++var.iter_j])
 				printf(" ");
 		}
-		printf("\n");
 	}
 	else
 	{
@@ -130,6 +134,8 @@ void echom(cmd_t *cmd)
 				printf(" ");
 		}
 	}
+	if (nline)
+		printf("\n");
 }
 
 void	env(char **envp)
