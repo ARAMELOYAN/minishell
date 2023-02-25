@@ -6,11 +6,109 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/22 14:35:27 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/25 19:58:07 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
+
+quote_t	*get_quote(char *ptr);
+
+char	*my_min(char *p1, char *p2)
+{
+	if (p1 && p2)
+		if (p1 < p2)
+			return (p1);
+		else
+			return (p2);
+	if (!p1)
+		return (p2);
+	return (p1);
+}
+
+static int	rows(char *s, char c)
+{
+	int	i;
+	int	k;
+	int	d;
+
+	i = 0;
+	k = 0;
+	while (s[i] && c)
+	{
+		d = 0;
+		while (s[i] == c)
+			++i;
+		while (s[i] != c && s[i])
+		{
+			i++;
+			d++;
+		}
+		if (d)
+			k++;
+	}
+	return (k);
+}
+
+static void	clean(char **mat, int j)
+{
+	while (j-- > 1)
+		free(mat[j - 1]);
+	free(mat);
+	return ;
+}
+
+static char	**init(char **mat, char *s, char c)
+{
+	quote_t	*quote;
+	char	*p_start;
+	char	*p_end;
+	int		i;
+	int		j;
+
+	j = 0;
+	i = 0;
+	p_start = s;
+	p_end = s;
+	quote = get_quote(s);
+	while (s[i])
+	{
+		while (s[i] == c)
+			p_start = &s[++i];
+		while (s[i] != c && s[i])
+			p_end = &s[++i];
+		while (quote != NULL && p_end > quote->start)
+		{
+			p_end = my_min(ft_strchr(quote->end, ' '), ft_strchr(quote->end, '\0'));
+			quote = get_quote(quote->end + 1);
+		}
+		i = p_end - s;
+		if (p_start < p_end)
+			mat[j] = ft_substr(s, p_start - s, p_end - p_start);
+		if (p_start < p_end && !mat[j++])
+		{
+			clean(mat, j);
+			return (0);
+		}
+	}
+	mat[j] = 0;
+	return (mat);
+}
+
+char	**ft_splir(char const *s, char c)
+{
+	char	**mat;
+
+	if (!s)
+		return (0);
+	mat = (char **)malloc(sizeof(char *) * (rows((char *)s, c) + 1));
+	if (!mat)
+		return (0);
+	mat = init(mat, (char *)s, c);
+	if (!mat)
+		return (0);
+	return (mat);
+}
 
 int	special(char *ch)
 {
@@ -178,19 +276,23 @@ quote_t	*get_quote(char *ptr)
 	return (quote);
 }
 
-void	clear_quote(char *arg)
+void	clear_quote(char **arg)
 {
 	quote_t	 *quote;
 	quote_t	 *quote_1;
 
-	quote = get_quote(arg);
-	while (quote)
+	while (arg && *arg)
 	{
-		ft_memmove(quote->start, quote->start + 1, ft_strlen(quote->start));
-		ft_memmove(quote->end - 1, quote->end, ft_strlen(quote->end) + 1);
-		quote_1 = quote;
-		quote = get_quote(quote->end - 1);
-		free(quote_1);
+		quote = get_quote(*arg);
+		while (quote)
+		{
+			ft_memmove(quote->start, quote->start + 1, ft_strlen(quote->start));
+			ft_memmove(quote->end - 1, quote->end, ft_strlen(quote->end) + 1);
+			quote_1 = quote;
+			quote = get_quote(quote->end - 1);
+			free(quote_1);
+		}
+		arg++;
 	}
 }
 
@@ -212,8 +314,8 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 		my_pipe(cmd, cmd_1);
 	parse_str(cmd_1, str, "output", '>');
 	parse_str(cmd_1, str, "input", '<');
-	clear_quote(str);
-	cmd_1->arg = ft_split(str, ' ');
+	cmd_1->arg = ft_splir(str, ' ');
+	clear_quote(cmd_1->arg);
 	return (cmd_1);
 }
 
@@ -273,7 +375,7 @@ void	sig(void)
 }
 
 int	buildin(cmd_t *cmd, char **envp)
-{//popoxel aynpes vor execven ashxatacni bildinnern
+{
 		if (!ft_strncmp(cmd->arg[0], "cd", 2) && !cmd->arg[0][2])
 			cd(cmd, envp);
 		else if (!ft_strncmp(cmd->arg[0], "pwd", 3) && !cmd->arg[0][3])
