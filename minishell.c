@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/28 16:43:19 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/28 17:09:08 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -311,6 +311,7 @@ char	*next_word(char *str)
 void	replace_dollar(char **arg, char **ptr)
 {
 	char	*temp;
+	char	*word;
 	char	*arg_1;
 	char	*err;
 
@@ -319,18 +320,19 @@ void	replace_dollar(char **arg, char **ptr)
 		*ptr = ft_strchr(*ptr + 1, '$');
 		return ;
 	}
-	temp = next_word(*ptr + 1);
+	word = next_word(*ptr + 1);
 	err = ft_itoa(errno);
 	**ptr = '\0';
 	if (*(*ptr + 1) == '?')
 		arg_1 = ft_strjoin(*arg, err);
 	else
-		arg_1 = ft_strjoin(*arg, getenv(temp));
+		arg_1 = ft_strjoin(*arg, getenv(word));
+	temp = ft_strjoin(arg_1, *ptr + ft_strlen(word) + 1);
 	free(*arg);
-	*arg = ft_strjoin(arg_1, *ptr + ft_strlen(temp) + 1);//can fail??
+	*arg = temp;
 	free(err);
 	free(arg_1);
-	free(temp);
+	free(word);
 	*ptr = ft_strchr(*arg, '$');
 }
 
