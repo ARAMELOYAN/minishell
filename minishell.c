@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/25 19:58:07 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/02/28 16:43:19 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -296,6 +296,72 @@ void	clear_quote(char **arg)
 	}
 }
 
+char	*next_word(char *str)
+{
+	int	i;
+
+	i = -1;
+	if (*str == '?')
+		return (ft_substr(str, 0, 1));
+	while (ft_isalpha(str[++i]))
+			;
+	return (ft_substr(str, 0, i));
+}
+
+void	replace_dollar(char **arg, char **ptr)
+{
+	char	*temp;
+	char	*arg_1;
+	char	*err;
+
+	if (!ft_isalpha(*(*ptr + 1)) && *(*ptr + 1) != '?')
+	{
+		*ptr = ft_strchr(*ptr + 1, '$');
+		return ;
+	}
+	temp = next_word(*ptr + 1);
+	err = ft_itoa(errno);
+	**ptr = '\0';
+	if (*(*ptr + 1) == '?')
+		arg_1 = ft_strjoin(*arg, err);
+	else
+		arg_1 = ft_strjoin(*arg, getenv(temp));
+	free(*arg);
+	*arg = ft_strjoin(arg_1, *ptr + ft_strlen(temp) + 1);//can fail??
+	free(err);
+	free(arg_1);
+	free(temp);
+	*ptr = ft_strchr(*arg, '$');
+}
+
+void	find_and_replace_dollar(char **arg)
+{
+	quote_t	*quote;
+	char	*ptr;
+
+	while (arg && *arg)
+	{
+		ptr = ft_strchr(*arg, '$');
+		if (!ptr)
+		{
+			arg++;
+			continue ;
+		}
+		quote = get_quote(*arg);
+		if (!quote)
+			while (ptr)
+				replace_dollar(arg, &ptr);
+		while (ptr && ptr + 1 && quote && (ptr < quote->start || (ptr > quote->start
+				&& ptr < quote->end && *quote->start == '"')))
+		{
+			replace_dollar(arg, &ptr);
+			quote = get_quote(*arg);
+		}
+		while (quote && ptr && ptr > quote->end)
+			quote = get_quote(quote->end + 1);
+	}
+}
+
 cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 {
 	cmd_t	*cmd_1;
@@ -315,6 +381,7 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 	parse_str(cmd_1, str, "output", '>');
 	parse_str(cmd_1, str, "input", '<');
 	cmd_1->arg = ft_splir(str, ' ');
+	find_and_replace_dollar(cmd_1->arg);
 	clear_quote(cmd_1->arg);
 	return (cmd_1);
 }
@@ -352,7 +419,7 @@ cmd_t	*del_cmd(cmd_t *cmd, var_t *var)
 	var->iter_i = 0;
 	while (cmd->arg[var->iter_i])
 		free(cmd->arg[var->iter_i++]);
-	//free(cmd->arg);
+	free(cmd->arg);
 	free(cmd);
 	return (cmd_1);
 }
