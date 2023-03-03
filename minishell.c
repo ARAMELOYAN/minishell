@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/02 20:31:11 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/03 18:06:15 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ static char	**init(char **mat, char *s, char c)
 			p_start = &s[++i];
 		while (s[i] != c && s[i])
 			p_end = &s[++i];
-		while (quote != NULL && p_end > quote->start)
+		while (quote && p_end > quote->start)
 		{
 			p_end = my_min(ft_strchr(quote->end, ' '), ft_strchr(quote->end, '\0'));
 			quote = get_quote(quote->end + 1);
@@ -334,10 +334,17 @@ void	replace(char **arg, char **ptr)
 	while (*ptr && !ft_isalpha(*(*ptr + 1)) && *(*ptr + 1) != '?')
 		*ptr = ft_strchr(*ptr + 1, '$');
 }
-void	replace_dollar(char **arg, char **ptr)
+
+void	replace_dollar(char **arg, quote_t **quote,  char **ptr)
 {
 	if (ft_isalpha(*(*ptr + 1)) || *(*ptr + 1) == '?')
+	{
 		replace(arg, ptr);
+		if (quote)
+			*quote = get_quote(*arg);
+		while (quote && *quote && (*quote)->end < *ptr)
+			*quote = get_quote((*quote)->end + 1);
+	}
 	else
 		*ptr = ft_strchr(*ptr + 1, '$');
 }
@@ -353,21 +360,19 @@ void	find_dollar(char **arg)
 		quote = get_quote(*arg);
 		while (ptr && quote)
 		{
-			printf("PTR_%p, QUOTE-start_%s, QUOTE-end_%p, ARG_%s\n", ptr, quote->start, quote->end, *arg);
 			while (ptr && quote && ptr < quote->start)
-				replace_dollar(arg, &ptr);
+				replace_dollar(arg, &quote, &ptr);
 			while (ptr && quote && ptr > quote->start
 					&& ptr < quote->end && *quote->start == '"')
-				replace_dollar(arg, &ptr);
+				replace_dollar(arg, &quote, &ptr);
 			if (*quote->end == '\'')
 			{
 				ptr = ft_strchr(quote->end, '$');
 				quote = get_quote(quote->end + 1);
 			}
-			sleep(1);
 		}
 		while (ptr)
-			replace_dollar(arg, &ptr);
+			replace_dollar(arg, NULL, &ptr);
 		arg++;
 	}
 }
