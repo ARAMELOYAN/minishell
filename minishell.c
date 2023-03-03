@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/28 17:09:08 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/02 20:31:11 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -308,25 +308,22 @@ char	*next_word(char *str)
 	return (ft_substr(str, 0, i));
 }
 
-void	replace_dollar(char **arg, char **ptr)
+void	replace(char **arg, char **ptr)
 {
 	char	*temp;
 	char	*word;
 	char	*arg_1;
 	char	*err;
 
-	if (!ft_isalpha(*(*ptr + 1)) && *(*ptr + 1) != '?')
-	{
-		*ptr = ft_strchr(*ptr + 1, '$');
-		return ;
-	}
 	word = next_word(*ptr + 1);
 	err = ft_itoa(errno);
 	**ptr = '\0';
 	if (*(*ptr + 1) == '?')
 		arg_1 = ft_strjoin(*arg, err);
-	else
+	else if (getenv(word))
 		arg_1 = ft_strjoin(*arg, getenv(word));
+	else
+		arg_1 = ft_strdup(*arg);
 	temp = ft_strjoin(arg_1, *ptr + ft_strlen(word) + 1);
 	free(*arg);
 	*arg = temp;
@@ -334,9 +331,18 @@ void	replace_dollar(char **arg, char **ptr)
 	free(arg_1);
 	free(word);
 	*ptr = ft_strchr(*arg, '$');
+	while (*ptr && !ft_isalpha(*(*ptr + 1)) && *(*ptr + 1) != '?')
+		*ptr = ft_strchr(*ptr + 1, '$');
+}
+void	replace_dollar(char **arg, char **ptr)
+{
+	if (ft_isalpha(*(*ptr + 1)) || *(*ptr + 1) == '?')
+		replace(arg, ptr);
+	else
+		*ptr = ft_strchr(*ptr + 1, '$');
 }
 
-void	find_and_replace_dollar(char **arg)
+void	find_dollar(char **arg)
 {
 	quote_t	*quote;
 	char	*ptr;
@@ -344,23 +350,25 @@ void	find_and_replace_dollar(char **arg)
 	while (arg && *arg)
 	{
 		ptr = ft_strchr(*arg, '$');
-		if (!ptr)
-		{
-			arg++;
-			continue ;
-		}
 		quote = get_quote(*arg);
-		if (!quote)
-			while (ptr)
-				replace_dollar(arg, &ptr);
-		while (ptr && ptr + 1 && quote && (ptr < quote->start || (ptr > quote->start
-				&& ptr < quote->end && *quote->start == '"')))
+		while (ptr && quote)
 		{
-			replace_dollar(arg, &ptr);
-			quote = get_quote(*arg);
+			printf("PTR_%p, QUOTE-start_%s, QUOTE-end_%p, ARG_%s\n", ptr, quote->start, quote->end, *arg);
+			while (ptr && quote && ptr < quote->start)
+				replace_dollar(arg, &ptr);
+			while (ptr && quote && ptr > quote->start
+					&& ptr < quote->end && *quote->start == '"')
+				replace_dollar(arg, &ptr);
+			if (*quote->end == '\'')
+			{
+				ptr = ft_strchr(quote->end, '$');
+				quote = get_quote(quote->end + 1);
+			}
+			sleep(1);
 		}
-		while (quote && ptr && ptr > quote->end)
-			quote = get_quote(quote->end + 1);
+		while (ptr)
+			replace_dollar(arg, &ptr);
+		arg++;
 	}
 }
 
@@ -383,7 +391,7 @@ cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
 	parse_str(cmd_1, str, "output", '>');
 	parse_str(cmd_1, str, "input", '<');
 	cmd_1->arg = ft_splir(str, ' ');
-	find_and_replace_dollar(cmd_1->arg);
+	find_dollar(cmd_1->arg);
 	clear_quote(cmd_1->arg);
 	return (cmd_1);
 }
