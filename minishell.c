@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/03 18:06:15 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/03 18:23:13 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,7 @@ static char	**init(char **mat, char *s, char c)
 	p_start = s;
 	p_end = s;
 	quote = get_quote(s);
+	printf(s);
 	while (s[i])
 	{
 		while (s[i] == c)
@@ -80,6 +81,8 @@ static char	**init(char **mat, char *s, char c)
 		while (quote && p_end > quote->start)
 		{
 			p_end = my_min(ft_strchr(quote->end, ' '), ft_strchr(quote->end, '\0'));
+		printf("\e[0;32m*quote_%i\e[0;0m\n", (int)quote->start - (int)s);
+		printf("\e[0;32m*quote_%i\e[0;0m\n", (int)quote->end- (int)s);
 			quote = get_quote(quote->end + 1);
 		}
 		i = p_end - s;
@@ -272,7 +275,7 @@ quote_t	*get_quote(char *ptr)
 		quote->end = ft_strchr(quote->start + 1, '"');
 	}
 	if (!quote->end)
-		return (-1);
+		return (-3);
 	return (quote);
 }
 
