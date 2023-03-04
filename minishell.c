@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/03 18:23:13 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/04 16:11:00 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,6 @@ static char	**init(char **mat, char *s, char c)
 	p_start = s;
 	p_end = s;
 	quote = get_quote(s);
-	printf(s);
 	while (s[i])
 	{
 		while (s[i] == c)
@@ -81,8 +80,6 @@ static char	**init(char **mat, char *s, char c)
 		while (quote && p_end > quote->start)
 		{
 			p_end = my_min(ft_strchr(quote->end, ' '), ft_strchr(quote->end, '\0'));
-		printf("\e[0;32m*quote_%i\e[0;0m\n", (int)quote->start - (int)s);
-		printf("\e[0;32m*quote_%i\e[0;0m\n", (int)quote->end- (int)s);
 			quote = get_quote(quote->end + 1);
 		}
 		i = p_end - s;
@@ -493,18 +490,27 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 	quote = get_quote(s);
 	if (quote == -1)
 		return (0);
-	else if (quote > 0)
+	while (quote > 0 && ptr)
 	{
-		while (ptr && ptr > quote->start && ptr < quote->end)
+		while (ptr && ptr < quote->start)
 		{
-			ptr = ft_strchr(ptr + 1, '|');
-			if (ptr > quote->end)
-			{
-				quote_temp = quote;
-				quote = get_quote(quote->end + 1);
-				free(quote_temp);
-			}
+			if (ptr == s || *(++ptr) == '|')//syntax
+				return (0);
+			dst = (char *)malloc(ptr - s);
+			if (!dst)
+				return (0);
+			ft_strlcpy(dst, s, ptr - s);//poxaren@ kareli e memmove ogtagorcel erevi
+			if (*cmd)
+				add_cmd(dst, *cmd, var);
+			else
+				*cmd = add_cmd(dst, *cmd, var);
+			free(dst);
+			s = ptr;
+			ptr = ft_strchr(s, '|');
 		}
+		if (ptr)
+			ptr = ft_strchr(quote->end, '|');
+		quote = get_quote(quote->end + 1);
 	}
 	while(ptr)
 	{

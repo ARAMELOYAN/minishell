@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 16:16:45 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/14 18:48:50 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/04 16:28:31 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,36 +25,18 @@ int exec(cmd_t *cmd, char **envp)
 		var.iter_i = 0;
 		while (var.path_split[var.iter_i])
 		{
-			var.directory = opendir(var.path_split[var.iter_i]);
-			if (!var.directory)
+			var.cmd_path = ft_strjoin(var.path_split[var.iter_i], "/");
+			var.cmd_path_1 = ft_strjoin(var.cmd_path, cmd->arg[0]);
+			free(var.cmd_path);
+			if (!access(var.cmd_path_1, X_OK))
 			{
-				perror(0);
-				return (errno);
-			}
-			entity = readdir(var.directory);
-			if (!entity)
-			{
-				perror(0);
-				return (errno);
-			}
-			while (entity)
-			{
-				if (!ft_strncmp(entity->d_name, cmd->arg[0], ft_strlen(cmd->arg[0]))
-						&& !entity->d_name[ft_strlen(cmd->arg[0])])
+				if (execve(var.cmd_path_1, cmd->arg, envp) == -1)
 				{
-					var.cmd_path = ft_strjoin(var.path_split[var.iter_i], "/");
-					var.cmd_path_1 = ft_strjoin(var.cmd_path, entity->d_name);
-					free(var.cmd_path);
-					if (execve(var.cmd_path_1, cmd->arg, envp) == -1)
-					{
-						perror(0);
-						return (errno);
-					}
-					free(var.cmd_path_1);
+					perror(0);
+					return (errno);
 				}
-				entity = readdir(var.directory);
+				free(var.cmd_path_1);
 			}
-			closedir(var.directory);
 			var.iter_i++;
 		}
 		exit(0);
