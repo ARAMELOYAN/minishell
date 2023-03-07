@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/07 15:41:43 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/07 19:21:47 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,22 +33,24 @@ void	unset(cmd_t *cmd, char **envp)
 void	export(cmd_t *cmd, char **envrp)
 {
 	char	**envp;
+	char	**temp;
 
-	while (*(++cmd->arg))
+	temp = cmd->arg;
+	while (*(++temp))
 	{
 		envp = envrp;
 		while (*envp)
 		{
-			if (!ft_strncmp(*envp, *cmd->arg, ft_strchr(*cmd->arg, '=') - *cmd->arg))
+			if (!ft_strncmp(*envp, *temp, ft_strchr(*temp, '=') - *temp))
 			{
-				*envp = ft_strdup(*cmd->arg);//jshtel, ardyoq petq e malloq unena aystegh
+				*envp = ft_strdup(*temp);//jshtel, ardyoq petq e malloq unena aystegh
 				break ;
 			}
 			envp++;
 		}
 		if (!*envp)
 		{
-			*envp = ft_strdup(*cmd->arg);//jshtel, ardyoq petq e malloq unena aystegh
+			*envp = ft_strdup(*temp);//jshtel, ardyoq petq e malloq unena aystegh
 			*(++envp) = NULL;
 		}
 	}
@@ -69,8 +71,8 @@ void	manevr(char **envp)
 	cmd_1 = (cmd_t *)malloc(sizeof(cmd_t));
 	cmd_1->arg = (char **)malloc(sizeof(char *) * 4);
 	cmd_1->arg[0] = ft_strdup("export");
-	cmd_1->arg[1] = ft_strjoin("OLDPWD=", getenv("PWD"));
-	cmd_1->arg[2] = ft_strjoin("PWD=", getcwd(var.buffer, 200));
+	cmd_1->arg[1] = ft_strjoin("PWD=", getcwd(var.buffer, 200));
+	cmd_1->arg[2] = ft_strjoin("OLDPWD=", getenv("PWD"));
 	cmd_1->arg[3] = NULL;
 	cmd_1->hd = 0;
 	cmd_1->next = NULL;
@@ -82,6 +84,7 @@ int cd(cmd_t *cmd, char **envp)
 {
 	if (!*(++cmd->arg))
 	{
+		cmd->arg--;
 		if (!getenv("HOME") || chdir(getenv("HOME")) == -1)
 		{
 			perror("msh: cd");
@@ -91,7 +94,7 @@ int cd(cmd_t *cmd, char **envp)
 	}
 	else
 	{
-		if (chdir(*(cmd->arg)) == -1)
+		if (chdir(*(cmd->arg--)) == -1)
 			perror(strerror(errno));
 		else
 			manevr(envp);
