@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/04 16:11:00 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/07 13:04:27 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,7 @@ static void	clean(char **mat, int j)
 static char	**init(char **mat, char *s, char c)
 {
 	quote_t	*quote;
+	quote_t	*quote_1;
 	char	*p_start;
 	char	*p_end;
 	int		i;
@@ -74,15 +75,21 @@ static char	**init(char **mat, char *s, char c)
 	while (s[i])
 	{
 		while (s[i] == c)
+		{
 			p_start = &s[++i];
+		}
 		while (s[i] != c && s[i])
+		{
 			p_end = &s[++i];
-		while (quote && p_end > quote->start)
+		}
+		while (quote > 0 && p_end > quote->start)
 		{
 			p_end = my_min(ft_strchr(quote->end, ' '), ft_strchr(quote->end, '\0'));
+			quote_1 = quote;
 			quote = get_quote(quote->end + 1);
+			free(quote_1);
+			i = p_end - s;// stex kaskac ka
 		}
-		i = p_end - s;
 		if (p_start < p_end)
 			mat[j] = ft_substr(s, p_start - s, p_end - p_start);
 		if (p_start < p_end && !mat[j++])
@@ -272,7 +279,10 @@ quote_t	*get_quote(char *ptr)
 		quote->end = ft_strchr(quote->start + 1, '"');
 	}
 	if (!quote->end)
+	{
+		free(quote);
 		return (-3);
+	}
 	return (quote);
 }
 
@@ -284,7 +294,7 @@ void	clear_quote(char **arg)
 	while (arg && *arg)
 	{
 		quote = get_quote(*arg);
-		while (quote)
+		while (quote > 0)
 		{
 			ft_memmove(quote->start, quote->start + 1, ft_strlen(quote->start));
 			ft_memmove(quote->end - 1, quote->end, ft_strlen(quote->end) + 1);
@@ -337,13 +347,22 @@ void	replace(char **arg, char **ptr)
 
 void	replace_dollar(char **arg, quote_t **quote,  char **ptr)
 {
+	quote_t	*quote_1;
+
 	if (ft_isalpha(*(*ptr + 1)) || *(*ptr + 1) == '?')
 	{
 		replace(arg, ptr);
-		if (quote)
+		if (quote > 0 && *quote > 0)
+		{
+			free(*quote);
 			*quote = get_quote(*arg);
-		while (quote && *quote && (*quote)->end < *ptr)
+		}
+		while (quote && *quote > 0 && (*quote)->end < *ptr)
+		{
+			quote_1 = *quote;
 			*quote = get_quote((*quote)->end + 1);
+			free(quote_1);
+		}
 	}
 	else
 		*ptr = ft_strchr(*ptr + 1, '$');
@@ -352,23 +371,26 @@ void	replace_dollar(char **arg, quote_t **quote,  char **ptr)
 void	find_dollar(char **arg)
 {
 	quote_t	*quote;
+	quote_t	*quote_1;
 	char	*ptr;
 
 	while (arg && *arg)
 	{
 		ptr = ft_strchr(*arg, '$');
 		quote = get_quote(*arg);
-		while (ptr && quote)
+		while (ptr && quote > 0)
 		{
-			while (ptr && quote && ptr < quote->start)
+			while (ptr && quote > 0 && ptr < quote->start)
 				replace_dollar(arg, &quote, &ptr);
-			while (ptr && quote && ptr > quote->start
+			while (ptr && quote > 0 && ptr > quote->start
 					&& ptr < quote->end && *quote->start == '"')
 				replace_dollar(arg, &quote, &ptr);
-			if (*quote->end == '\'')
+			if (quote > 0 && *quote->end == '\'')
 			{
 				ptr = ft_strchr(quote->end, '$');
+				quote_1 = quote;
 				quote = get_quote(quote->end + 1);
+				free(quote_1);
 			}
 		}
 		while (ptr)
@@ -377,33 +399,36 @@ void	find_dollar(char **arg)
 	}
 }
 
-cmd_t	*add_cmd(char *str, cmd_t *cmd, var_t *var)
+void	add_cmd(char *str, cmd_t **cmd, var_t *var)
 {
 	cmd_t	*cmd_1;
 
 	if (!str || !*str)
-		return (NULL);
+		return ;
 	var->count++;
 	cmd_1 = (cmd_t *)malloc(sizeof(cmd_t));
 	cmd_1->next = NULL;
 	cmd_1->hd = 0;
-	while (cmd && cmd->next)
-		cmd = cmd->next;
+	while (cmd  && *cmd && (*cmd)->next)
+		*cmd = (*cmd)->next;
 	cmd_1->fd[0] = 0;
 	cmd_1->fd[1] = 1;
-	if (cmd)
-		my_pipe(cmd, cmd_1);
+	if (cmd && *cmd)
+		my_pipe(*cmd, cmd_1);
 	parse_str(cmd_1, str, "output", '>');
 	parse_str(cmd_1, str, "input", '<');
 	cmd_1->arg = ft_splir(str, ' ');
 	find_dollar(cmd_1->arg);
 	clear_quote(cmd_1->arg);
-	return (cmd_1);
+	if (cmd && *cmd)
+		(*cmd)->next = cmd_1;
+	else
+		*cmd = cmd_1;
 }
 
 void	del_heredoc(cmd_t *cmd)
 {
-	char *arg[3];
+	char	*arg[3];
 
 	cmd->hd = 0;
 	arg[0] = ft_strdup("rm");
@@ -477,11 +502,27 @@ int	buildin(cmd_t *cmd, char **envp)
 		return (1);
 }
 
-int	check_serror(char *s, cmd_t **cmd, var_t *var)
+void	dev_cmd(char **s, char **ptr, cmd_t **cmd, var_t *var, quote_t *quote)
 {
 	char	*dst;
+
+	if (*ptr == *s || *(++*ptr) == '|')
+		return ;
+	dst = (char *)malloc(*ptr - *s);
+	if (!dst)
+		return ;
+	ft_strlcpy(dst, *s, *ptr - *s);
+		add_cmd(dst, cmd, var);
+	free(dst);
+	*s = *ptr;
+	*ptr = ft_strchr(*s, '|');
+}
+
+int	check_serror(char *s, cmd_t **cmd, var_t *var)
+{
 	char	*ptr;
 	quote_t	*quote;
+	quote_t	*quote_1;
 	quote_t	*quote_temp;
 
 	*cmd = NULL;
@@ -493,45 +534,16 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 	while (quote > 0 && ptr)
 	{
 		while (ptr && ptr < quote->start)
-		{
-			if (ptr == s || *(++ptr) == '|')//syntax
-				return (0);
-			dst = (char *)malloc(ptr - s);
-			if (!dst)
-				return (0);
-			ft_strlcpy(dst, s, ptr - s);//poxaren@ kareli e memmove ogtagorcel erevi
-			if (*cmd)
-				add_cmd(dst, *cmd, var);
-			else
-				*cmd = add_cmd(dst, *cmd, var);
-			free(dst);
-			s = ptr;
-			ptr = ft_strchr(s, '|');
-		}
+			dev_cmd(&s, &ptr, cmd, var, quote);
 		if (ptr)
 			ptr = ft_strchr(quote->end, '|');
+		quote_1 = quote;
 		quote = get_quote(quote->end + 1);
+		free(quote_1);
 	}
 	while(ptr)
-	{
-		if (ptr == s || *(++ptr) == '|')//syntax
-			return (0);
-		dst = (char *)malloc(ptr - s);
-		if (!dst)
-			return (0);
-		ft_strlcpy(dst, s, ptr - s);//poxaren@ kareli e memmove ogtagorcel erevi
-		if (*cmd)
-			add_cmd(dst, *cmd, var);
-		else
-			*cmd = add_cmd(dst, *cmd, var);
-		free(dst);
-		s = ptr;
-		ptr = ft_strchr(s, '|');
-	}
-	if (*cmd)
-		add_cmd(s, *cmd, var);
-	else
-		*cmd = add_cmd(s, *cmd, var);
+		dev_cmd(&s, &ptr, cmd, var, quote);
+	add_cmd(s, cmd, var);
 	return (1);
 }
 
@@ -574,10 +586,10 @@ int	funk(cmd_t *cmd, var_t *var, char **envp)
 		}
 		else
 			run(cmd, var, envp);
-	dup2(var->fd_input, 0);
-	dup2(var->fd_output, 1);
-	close(var->fd_input);
-	close(var->fd_output);
+		dup2(var->fd_input, 0);
+		dup2(var->fd_output, 1);
+		close(var->fd_input);
+		close(var->fd_output);
 		cmd = del_cmd(cmd, var);
 	}
 }
@@ -588,6 +600,7 @@ int main(int ac, char **av, char **envp)
 	cmd_t	*cmd;
 	var_t	*var;
 
+	cmd = NULL;
 	var = (var_t *)malloc(sizeof(var_t));
 	while (1)
 	{
@@ -598,7 +611,7 @@ int main(int ac, char **av, char **envp)
 		add_history(ch);
 		if (!check_serror(ch, &cmd, var))
 		{
-			perror(strerror(errno));
+			perror(0);
 			free(ch);
 			continue ;
 		}
