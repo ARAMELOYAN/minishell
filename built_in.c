@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/23 18:46:08 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/07 15:41:43 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,6 +161,7 @@ void exitm(cmd_t *cmd)
 				write(2, ": numeric argument required\n", 28);
 				exit(255);
 			}	
+			var.iter_i++;
 		}
 		if (cmd->arg[2])
 		{
