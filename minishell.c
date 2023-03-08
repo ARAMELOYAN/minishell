@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/07 19:22:03 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/08 13:25:43 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -288,8 +288,8 @@ quote_t	*get_quote(char *ptr)
 
 void	clear_quote(char **arg)
 {
-	quote_t	 *quote;
-	quote_t	 *quote_1;
+	quote_t	*quote;
+	quote_t	*quote_1;
 
 	while (arg && *arg)
 	{
@@ -388,6 +388,12 @@ void	find_dollar(char **arg)
 			if (quote > 0 && *quote->end == '\'')
 			{
 				ptr = ft_strchr(quote->end, '$');
+				quote_1 = quote;
+				quote = get_quote(quote->end + 1);
+				free(quote_1);
+			}
+			while (ptr && quote > 0 && ptr > quote->end)
+			{
 				quote_1 = quote;
 				quote = get_quote(quote->end + 1);
 				free(quote_1);
