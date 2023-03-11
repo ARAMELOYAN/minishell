@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/11 15:22:56 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/11 17:22:42 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -245,6 +245,7 @@ void	my_pipe(cmd_t *cmd, cmd_t *cmd_1)
 
 	while (cmd && cmd->next)
 		cmd = cmd->next;
+	cmd->next = cmd_1;
 	if (pipe(fd) == -1)
 		perror(0);
 	if (cmd->fd[1] == 1)
@@ -425,6 +426,7 @@ void	reset_empty_line(cmd_t *cmd)
 
 void	add_cmd_back(cmd_t *cmd, cmd_t *cmd_1)
 {
+	printf("\e[0;31m%p__%p\n%p__%p\e[0;0m\n", cmd, cmd->next, cmd_1, cmd_1->next); 
 	while (cmd && cmd->next)
 		cmd = cmd->next;
 	cmd->next = cmd_1;
@@ -450,11 +452,8 @@ void	add_cmd(char *str, cmd_t **cmd, var_t *var)
 	find_dollar(cmd_1->arg);
 	clear_quote(cmd_1->arg);
 	reset_empty_line(cmd_1);
-	if (cmd && *cmd)
-		add_cmd_back(*cmd, cmd_1);
-	else
+	if (!*cmd)
 		*cmd = cmd_1;
-	print_cmd(*cmd);
 }
 
 void	del_heredoc(cmd_t *cmd)
@@ -625,7 +624,7 @@ int	funk(cmd_t *cmd, var_t *var, char **envp)
 	}
 }
 
-void	print_cmd(cmd_t *cmd)
+/*void	print_cmd(cmd_t *cmd)
 {
 	char	**temp;
 
@@ -635,9 +634,9 @@ void	print_cmd(cmd_t *cmd)
 		while(*temp)
 			printf("\e[0;33m%s\e[0;0m\n", *(temp++));
 		cmd = cmd->next;
-	printf("\e[0;33mhello__q\e[0;0m\n"); 
 	}
-}
+}*/
+
 int main(int ac, char **av, char **envp)
 {
 	char	*ch;
