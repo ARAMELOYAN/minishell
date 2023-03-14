@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/11 17:22:42 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/14 18:14:10 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 quote_t	*get_quote(char *ptr);
 void	print_cmd(cmd_t *cmd);
+void	clear_quote(char **arg);
+void    find_dollar(char **arg);
 
 char	*my_min(char *p1, char *p2)
 {
@@ -122,36 +124,29 @@ int	special(char *ch)
 {
 	if (*ch == '|' || *ch == '&' || *ch == ';' || *ch == '<' || *ch == '>'
 			|| *ch == '(' || *ch == ')' || *ch == '$' || *ch == '`'
-			|| *ch == '"' || *ch == '\0' || *ch == '\'')
+			|| *ch == '"' || *ch == '\0' || *ch == '\'' || *ch == ' ')
 		return (1);
 	return (0);
 }
 
-char	*next_special(char *str)
-{
-	if (!str || !*str)
-		return (0);
-	while (!special((++str)))
-		;
-	return (str);
-}
-
 int	heredoc(cmd_t *cmd, var_t *var)
 {
-	char 	*ch;
+	char 	*ch[2];
 
-	var->fd = open(".heredoc", O_WRONLY| O_CREAT | O_TRUNC, 0644);
+	var->fd = open(".heredoc", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	ch[1] = NULL;
 	while (1)
 	{
-		ch = readline("heredoc> ");
-		if (!ft_strncmp(ch, var->file, ft_strlen(ch))
-				&& ft_strlen(ch) == ft_strlen(var->file))
+		ch[0] = readline("heredoc> ");
+		if (!ft_strncmp(ch[0], var->file, ft_strlen(ch[0]) + 1))
 			break;
-		write(var->fd, ch, ft_strlen(ch));
+		if (var->open_dollar == 1)
+			find_dollar(ch);
+		write(var->fd, ch[0], ft_strlen(ch[0]));
 		write(var->fd, "\n", 1);
-		free(ch);
+		free(ch[0]);
 	}
-	free(ch);
+	free(ch[0]);
 	close(var->fd);
 	var->fd = open(".heredoc", O_RDONLY);
 	cmd->hd = 1;
@@ -188,19 +183,54 @@ int	redir_output(cmd_t *cmd, var_t *var, int i)
 	return (0);
 }
 
+char	*next_special(char *str)
+{
+	if (!str || !*str)
+		return (0);
+	while (!special((++str)))
+		;
+	return (str);
+}
+
+void	find_key(char *str, var_t *var)
+{
+	quote_t	*quote;
+	quote_t	*quote_1;
+
+	var->ptr = next_special(str);
+	quote = get_quote(str);
+	if (quote > 0)
+		var->open_dollar = 0;
+	else
+		var->open_dollar = 1;
+	while (quote > 0 && var->ptr == quote->start)
+	{
+		var->ptr = next_special(quote->end);
+		quote_1 = quote;
+		quote = get_quote(quote->end + 1);//memory leak
+		free(quote_1);
+	}
+	if (quote > 0)
+		free(quote);
+}
+
 int my_open(cmd_t *cmd, char *str, int i, char *motiv)
 {
 	var_t	var;
+	char	*file[2];
 
+	file[1] = NULL;
 	if (str && *str)
 	{
 		var.file_1 = ft_strtrim(str, " \t\v\n");
-		var.ptr = next_special(str);
+		find_key(str, &var);
 		ft_memmove(str, var.ptr, ft_strlen(var.ptr) + 1);
-		var.ptr = next_special(var.file_1);
+		find_key(var.file_1, &var);
 		*var.ptr = '\0';
 		var.file = ft_strtrim(var.file_1, " \t\v\n");
 		free(var.file_1);
+		file[0] = var.file;
+		clear_quote(file);
 		if (!ft_strncmp(motiv, "output", 6))
 			return (redir_output(cmd, &var, i));
 		else if (!ft_strncmp(motiv, "input", 6))
@@ -217,8 +247,8 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 	while (var.ptr)
 	{
 		ft_memmove(var.ptr, var.ptr + 1, ft_strlen(var.ptr));
-		if ((*(var.ptr) == ch && special(var.ptr + 1))
-				|| (*(var.ptr) != ch && special(var.ptr)))
+		if ((*(var.ptr) == ch && special(var.ptr + 1) && *(var.ptr + 1) != ' ')
+				|| (*(var.ptr) != ch && special(var.ptr) && *var.ptr != ' '))
 		{
 			perror("SPECIAL 1");
 			exit (1);
@@ -235,7 +265,7 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 		}
 		else
 			my_open(cmd, var.ptr, 0, motiv);//depq: ls > file
-		var.ptr = ft_strchr(str, ch);	
+		var.ptr = ft_strchr(str, ch);
 	}
 }
 
@@ -424,14 +454,6 @@ void	reset_empty_line(cmd_t *cmd)
 	}
 }
 
-void	add_cmd_back(cmd_t *cmd, cmd_t *cmd_1)
-{
-	printf("\e[0;31m%p__%p\n%p__%p\e[0;0m\n", cmd, cmd->next, cmd_1, cmd_1->next); 
-	while (cmd && cmd->next)
-		cmd = cmd->next;
-	cmd->next = cmd_1;
-}
-
 void	add_cmd(char *str, cmd_t **cmd, var_t *var)
 {
 	cmd_t	*cmd_1;
@@ -513,19 +535,19 @@ void	sig(void)
 
 int	buildin(cmd_t *cmd, char **envp)
 {
-		if (!ft_strncmp(cmd->arg[0], "cd", 2) && !cmd->arg[0][2])
+		if (!ft_strncmp(cmd->arg[0], "cd", 3))
 			cd(cmd, envp);
-		else if (!ft_strncmp(cmd->arg[0], "pwd", 3) && !cmd->arg[0][3])
+		else if (!ft_strncmp(cmd->arg[0], "pwd", 4))
 			pwd();
-		else if (!ft_strncmp(cmd->arg[0], "echo", 4) && !cmd->arg[0][4])
+		else if (!ft_strncmp(cmd->arg[0], "echo", 5))
 			echom(cmd);
-		else if (!ft_strncmp(cmd->arg[0], "env", 3) && !cmd->arg[0][3])
+		else if (!ft_strncmp(cmd->arg[0], "env", 4))
 			env(envp);
-		else if (!ft_strncmp(cmd->arg[0], "export", 6) && !cmd->arg[0][6])
+		else if (!ft_strncmp(cmd->arg[0], "export", 7))
 			export(cmd, envp);
-		else if (!ft_strncmp(cmd->arg[0], "unset", 5) && !cmd->arg[0][5])
+		else if (!ft_strncmp(cmd->arg[0], "unset", 6))
 			unset(cmd, envp);
-		else if (!ft_strncmp(cmd->arg[0], "exit", 4) && !cmd->arg[0][4])
+		else if (!ft_strncmp(cmd->arg[0], "exit", 5))
 			exitm(cmd);
 		else
 			return (0);

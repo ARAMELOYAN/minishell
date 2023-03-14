@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/07 19:21:47 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/12 19:02:01 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,6 +157,11 @@ void exitm(cmd_t *cmd)
 		var.iter_i = 0;
 		while (cmd->arg[1][var.iter_i])
 		{
+			if (var.iter_i == 0 && (cmd->arg[1][0] == '-' || cmd->arg[1][0] == '+'))
+			{
+				var.iter_i++;
+				continue ;
+			}
 			if (!ft_isdigit(cmd->arg[1][var.iter_i]))
 			{
 				write(2, "msh: exit: ", 11);

@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/02/06 13:37:10 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/14 18:12:13 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,7 @@ typedef struct	var
 	char 		*file;
 	char 		*file_1;
 	char		buffer[200];
+	int			open_dollar;
 	int			iter_i;
 	int			iter_j;
 	int			count;
