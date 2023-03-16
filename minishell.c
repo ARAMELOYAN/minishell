@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/14 18:14:10 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/16 13:02:31 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -258,13 +258,13 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 			perror("SPECIAL 2");
 			exit(2);
 		}
-		if (*(var.ptr) == ch)//depq: ls >> file
+		if (*(var.ptr) == ch)//depq: >>
 		{
 			ft_memmove(var.ptr, var.ptr + 1, ft_strlen(var.ptr));
 			my_open(cmd, var.ptr, 1, motiv);
 		}
 		else
-			my_open(cmd, var.ptr, 0, motiv);//depq: ls > file
+			my_open(cmd, var.ptr, 0, motiv);//depq: >
 		var.ptr = ft_strchr(str, ch);
 	}
 }
@@ -516,25 +516,10 @@ cmd_t	*del_cmd(cmd_t *cmd, var_t *var)
 	return (cmd_1);
 }
 
-void	handler(int sig)
-{
-	if (sig == SIGHUP)
-		write(1, "HELLO\n", 6);
-	if (sig == SIGQUIT)
-		write(1, "HELLO\n", 6);
-	if (sig == SIGINT)
-		rl_on_new_line();
-}
-
-void	sig(void)
-{
-	signal(SIGINT, handler);
-	signal(SIGQUIT, handler);
-	signal(SIGHUP, handler);
-}
-
 int	buildin(cmd_t *cmd, char **envp)
 {
+		if (!cmd->arg[0])
+			return (0);
 		if (!ft_strncmp(cmd->arg[0], "cd", 3))
 			cd(cmd, envp);
 		else if (!ft_strncmp(cmd->arg[0], "pwd", 4))
@@ -549,7 +534,7 @@ int	buildin(cmd_t *cmd, char **envp)
 			unset(cmd, envp);
 		else if (!ft_strncmp(cmd->arg[0], "exit", 5))
 			exitm(cmd);
-		else
+		else	
 			return (0);
 		return (1);
 }
@@ -646,18 +631,27 @@ int	funk(cmd_t *cmd, var_t *var, char **envp)
 	}
 }
 
-/*void	print_cmd(cmd_t *cmd)
+void	change_shlvl(char **envp)
 {
-	char	**temp;
+	char	*num_a;
+	char	*ptr;
+	int		num;
 
-	while (cmd)
+	while (*envp)
 	{
-		temp = cmd->arg;
-		while(*temp)
-			printf("\e[0;33m%s\e[0;0m\n", *(temp++));
-		cmd = cmd->next;
+		if (!ft_strncmp(*envp, "SHLVL=", 6))
+		{
+			ptr = ft_strchr(*envp, '=');
+			num = ft_atoi(ptr + 1);
+			num++;
+			num_a = ft_itoa(num);
+			*envp = ft_strjoin("SHLVL=", num_a);
+			free(num_a);
+			return ;
+		}
+		envp++;
 	}
-}*/
+}
 
 int main(int ac, char **av, char **envp)
 {
@@ -666,12 +660,11 @@ int main(int ac, char **av, char **envp)
 	var_t	*var;
 
 	cmd = NULL;
+	change_shlvl(envp);
 	var = (var_t *)malloc(sizeof(var_t));
 	while (1)
 	{
-		//SHLVL++;
-		ch = readline("\e[0;32mminishell$\e[0;0m ");
-		if (!ch)
+		if (!ch || !*ch)
 			continue ;
 		add_history(ch);
 		if (!check_serror(ch, &cmd, var))

@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/12 19:02:01 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/15 17:08:59 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,29 +30,45 @@ void	unset(cmd_t *cmd, char **envp)
 	}
 }
 
-void	export(cmd_t *cmd, char **envrp)
+void	print_export_formatted_env(char **env)
 {
-	char	**envp;
+	char	*key;
+	char	*value;
+
+	while (env && *env)
+	{
+		key = ft_substr(*env, 0, ft_strchr(*env, '=') - *env + 1);
+		value = ft_strchr(*env, '=') + 1;
+		printf("declare -x %s\"%s\"\n", key, value);
+		free(key);
+		++env;
+	}
+}
+
+void	export(cmd_t *cmd, char **envp)
+{
 	char	**temp;
 
 	temp = cmd->arg;
-	while (*(++temp))
+	if (!*(++temp))
+		print_export_formatted_env(envp);
+	while (*(temp))
 	{
-		envp = envrp;
 		while (*envp)
 		{
 			if (!ft_strncmp(*envp, *temp, ft_strchr(*temp, '=') - *temp))
 			{
-				*envp = ft_strdup(*temp);//jshtel, ardyoq petq e malloq unena aystegh
+				*envp = ft_strdup(*temp);
 				break ;
 			}
 			envp++;
 		}
 		if (!*envp)
 		{
-			*envp = ft_strdup(*temp);//jshtel, ardyoq petq e malloq unena aystegh
+			*envp = ft_strdup(*temp);
 			*(++envp) = NULL;
 		}
+		++temp;
 	}
 }
 
