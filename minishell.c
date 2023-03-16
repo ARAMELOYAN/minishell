@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/16 13:02:31 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/16 17:33:16 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -595,7 +595,12 @@ void	run(cmd_t *cmd, var_t *vari, char **envp)
 	if (cmd->fd[1] > 1)
 		close(cmd->fd[1]);
 	if (!buildin(cmd, envp) && !exec(cmd, envp))
-		perror("\e[1;31mCommand not found\e[0;0m");
+	{
+		errno = 127;
+		ft_putstr_fd("msh: ", 2);
+		ft_putstr_fd(cmd->arg[0], 2);
+		ft_putstr_fd(": command not found\n", 2);
+	}
 }
 
 int	funk(cmd_t *cmd, var_t *var, char **envp)
@@ -664,6 +669,7 @@ int main(int ac, char **av, char **envp)
 	var = (var_t *)malloc(sizeof(var_t));
 	while (1)
 	{
+		ch = readline("\e[0;32mminishell \e[0;0m");
 		if (!ch || !*ch)
 			continue ;
 		add_history(ch);

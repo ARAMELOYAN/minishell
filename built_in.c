@@ -6,26 +6,26 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/15 17:08:59 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/16 17:14:02 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	unset(cmd_t *cmd, char **envp)
+void	unset(cmd_t *cmd, char **e)
 {
 	while (*(++cmd->arg))
 	{
-		while (*envp)
+		while (*e)
 		{
-			if (!ft_strncmp(*envp, *cmd->arg, ft_strchr(*envp, '=') - *envp))
+			if (!ft_strncmp(*e, *cmd->arg, ft_strchr(*e, '=') - *e))
 			{
-				envp--;
-				while (*(++envp))
-					*envp = envp[1];
+				e--;
+				while (*(++e))
+					*e = e[1];
 				break ;
 			}
-			envp++;
+			e++;
 		}
 	}
 }
@@ -37,10 +37,15 @@ void	print_export_formatted_env(char **env)
 
 	while (env && *env)
 	{
-		key = ft_substr(*env, 0, ft_strchr(*env, '=') - *env + 1);
-		value = ft_strchr(*env, '=') + 1;
-		printf("declare -x %s\"%s\"\n", key, value);
-		free(key);
+		if (ft_strchr(*env, '='))
+		{
+			key = ft_substr(*env, 0, ft_strchr(*env, '=') - *env + 1);
+			value = ft_strchr(*env, '=') + 1;
+			printf("declare -x %s\"%s\"\n", key, value);
+			free(key);
+		}
+		else
+			printf("declare -x %s\n", *env);
 		++env;
 	}
 }
@@ -56,12 +61,16 @@ void	export(cmd_t *cmd, char **envp)
 	{
 		while (*envp)
 		{
-			if (!ft_strncmp(*envp, *temp, ft_strchr(*temp, '=') - *temp))
+			if (ft_strchr(*temp, '='))
 			{
-				*envp = ft_strdup(*temp);
-				break ;
+				if (!ft_strncmp(*envp, *temp, ft_strchr(*temp, '=') - *temp))
+					if (ft_strchr(*temp, '='))
+						*envp = ft_strdup(*temp);
 			}
-			envp++;
+			else if (!ft_strncmp(*envp, *temp, ft_strlen(*temp))
+					&& (*envp)[ft_strlen(*temp)] == '=')
+				return ;
+			++envp;
 		}
 		if (!*envp)
 		{
@@ -111,7 +120,7 @@ int cd(cmd_t *cmd, char **envp)
 	else
 	{
 		if (chdir(*(cmd->arg--)) == -1)
-			perror(strerror(errno));
+			perror("msh: cd");
 		else
 			manevr(envp);
 	}
@@ -126,7 +135,8 @@ void echom(cmd_t *cmd)
 	var.iter_i = 0;
 	var.iter_j = 0;
 	nline = 1;
-	while (cmd->arg[++var.iter_j] && !ft_strncmp(cmd->arg[var.iter_j], "-", 1))
+	while (cmd->arg[++var.iter_j]
+		&& !ft_strncmp(cmd->arg[var.iter_j], "-", 1))
 	{
 		var.iter_i = 0;
 		while (cmd->arg[var.iter_j][++var.iter_i] &&
@@ -160,7 +170,13 @@ void echom(cmd_t *cmd)
 void	env(char **envp)
 {
 	while (*envp)
-		printf("%s\n", *envp++);
+		if (ft_strchr(*envp, '='))
+			printf("%s\n", *envp++);
+		else
+		{
+			++envp;
+			continue ;
+		}
 }
 
 void exitm(cmd_t *cmd)
@@ -173,7 +189,8 @@ void exitm(cmd_t *cmd)
 		var.iter_i = 0;
 		while (cmd->arg[1][var.iter_i])
 		{
-			if (var.iter_i == 0 && (cmd->arg[1][0] == '-' || cmd->arg[1][0] == '+'))
+			if (var.iter_i == 0
+				&& (cmd->arg[1][0] == '-' || cmd->arg[1][0] == '+'))
 			{
 				var.iter_i++;
 				continue ;

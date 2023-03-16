@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 16:16:45 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/15 19:39:51 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/16 17:38:18 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 int exec(cmd_t *cmd, char **envp)
 {
 	var_t	var;
+	int	statlog;
 
 	//command not foundo
 	if (fork() == 0)
@@ -32,16 +33,17 @@ int exec(cmd_t *cmd, char **envp)
 			{
 				if (execve(var.cmd_path_1, cmd->arg, envp) == -1)
 				{
-					perror(0);
+					perror("msh: execve");
 					return (errno);
 				}
 				free(var.cmd_path_1);
 			}
 			var.iter_i++;
 		}
-		exit(0);
+		exit (2);
 	}
 	else
-		wait(0);
+		wait(&statlog);
+	printf("%s", statlog);
 	return (1);
 }
