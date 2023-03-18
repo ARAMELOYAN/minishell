@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/16 17:33:16 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/18 12:08:31 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -347,7 +347,7 @@ char	*next_word(char *str)
 	i = -1;
 	if (*str == '?')
 		return (ft_substr(str, 0, 1));
-	while (ft_isalpha(str[++i]))
+	while (ft_isalnum(str[++i]))
 			;
 	return (ft_substr(str, 0, i));
 }
