@@ -6,11 +6,25 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/18 18:56:20 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/19 16:36:24 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
+
+int	valid_identifier(char *arg, char **envp)
+{
+	int		i;
+
+	i = -1;
+	if (arg && arg[0] == '=')
+		return (0);
+	while (arg && arg[++i] && arg[i] != '=')
+		if ((i == 0 && (!ft_isalpha(arg[i]) && arg[i] != '_'))
+			|| ((!ft_isalnum(arg[i]) && arg[i] != '_' && arg[i] != '+')
+			|| (arg[i] == '+' && arg[i + 1] != '=')))
+			return (0);
+}
 
 void	unset(cmd_t *cmd, char **e)
 {
@@ -19,6 +33,14 @@ void	unset(cmd_t *cmd, char **e)
 	temp = cmd->arg;
 	while (*(++temp))
 	{
+	if (!valid_identifier(*temp, e) || ft_strchr(*temp, '='))
+	{
+		errno = 1;
+		ft_putstr_fd("msh: unset: `", 2);
+		ft_putstr_fd(*temp, 2);
+		ft_putstr_fd("': not a valid identifier\n", 2);
+		continue ;
+	}
 		while (*e)
 		{
 			if (!ft_strncmp(*e, *temp, ft_strchr(*e, '=') - *e))
@@ -53,17 +75,12 @@ void	print_export_formatted_env(char **env)
 	}
 }
 
-int	valid_identifier(char *arg, char **envp)
+int	valid(char *arg, char **envp)
 {
 	char	*ptr;
-	int		i;
 
-	i = -1;
-	while (arg && arg[++i] && arg[i] != '=')
-		if ((i == 0 && (!ft_isalpha(arg[i]) && arg[i] != '_'))
-			|| ((!ft_isalnum(arg[i]) && arg[i] != '_')
-			&& (arg[i] == '+' && arg[i + 1] != '=')))
-			return (0);
+	if (!valid_identifier(arg, envp))
+		return (0);
 	while (*envp)
 	{
 		ptr = ft_strchr(arg, '+');
@@ -107,7 +124,7 @@ void	export(cmd_t *cmd, char **envp)
 		print_export_formatted_env(envp);
 	while (*(temp))
 	{
-		if (!valid_identifier(*temp, envp))
+		if (!valid(*temp, envp))
 		{
 			errno = 1;
 			ft_putstr_fd("msh: export: `", 2);

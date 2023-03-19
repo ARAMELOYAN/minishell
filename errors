@@ -1,20 +1,6 @@
 echo asdk"
 err redir
 env | grep _=
-export =
-export ===
-export TE-ST=100
-export TEST-=100
-export ==========
-export 1TEST=
-export TE+S=T=
-export TES.T=123
-export TES+T=123
-export TES}T=123
-export TE*ST=123
-export TES#T=123
-export TES@T=123
-export =============123
-export +++++++=123
-export TES^T=123
-export ""=""
+cat /dev/random | head -c 100 | wc -c
+export a=nenie'iri
+echo $a
