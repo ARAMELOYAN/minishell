@@ -1,7 +1,6 @@
 echo asdk"
 err redir
 env | grep _=
-export 0
 export =
 export ===
 export TE-ST=100
@@ -18,3 +17,4 @@ export TES@T=123
 export =============123
 export +++++++=123
 export TES^T=123
+export ""=""
