@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/18 12:08:31 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/20 13:00:07 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -578,6 +578,11 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 		quote = get_quote(quote->end + 1);
 		free(quote_1);
 	}
+	if (quote == -3)
+	{
+		ft_putstr_fd("msh: syntax error near unexpected token `quote'\n", 2);
+		return (0);
+	}
 	while(ptr)
 		dev_cmd(&s, &ptr, cmd, var, quote);
 	add_cmd(s, cmd, var);
@@ -658,6 +663,12 @@ void	change_shlvl(char **envp)
 	}
 }
 
+void	my_alloc(char **env)
+{
+	while (env && *env)
+		*env = ft_strdup(*(env++));
+}
+
 int main(int ac, char **av, char **envp)
 {
 	char	*ch;
@@ -665,6 +676,7 @@ int main(int ac, char **av, char **envp)
 	var_t	*var;
 
 	cmd = NULL;
+	my_alloc(envp);
 	change_shlvl(envp);
 	var = (var_t *)malloc(sizeof(var_t));
 	while (1)
@@ -675,7 +687,6 @@ int main(int ac, char **av, char **envp)
 		add_history(ch);
 		if (!check_serror(ch, &cmd, var))
 		{
-			perror(0);
 			free(ch);
 			continue ;
 		}

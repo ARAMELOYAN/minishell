@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/19 16:36:24 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/20 12:20:43 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ void	unset(cmd_t *cmd, char **e)
 		{
 			if (!ft_strncmp(*e, *temp, ft_strchr(*e, '=') - *e))
 			{
+				free(*e);
 				e--;
 				while (*(++e))
 					*e = e[1];
