@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/20 13:00:07 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/21 18:18:39 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -250,13 +250,16 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 		if ((*(var.ptr) == ch && special(var.ptr + 1) && *(var.ptr + 1) != ' ')
 				|| (*(var.ptr) != ch && special(var.ptr) && *var.ptr != ' '))
 		{
-			perror("SPECIAL 1");
-			exit (1);
+			ft_putstr_fd("msh: syntax error near unexpected token `", 2);
+			if (!*var.ptr)
+				ft_putstr_fd("newline", 2);
+			ft_putchar_fd(*var.ptr, 2);
+			ft_putstr_fd("'\n", 2);
+			return (0);
 		}
 		else if (!*(var.ptr) || !*(var.ptr + 1))
 		{
 			perror("SPECIAL 2");
-			exit(2);
 		}
 		if (*(var.ptr) == ch)//depq: >>
 		{
@@ -454,12 +457,12 @@ void	reset_empty_line(cmd_t *cmd)
 	}
 }
 
-void	add_cmd(char *str, cmd_t **cmd, var_t *var)
+int	add_cmd(char *str, cmd_t **cmd, var_t *var)
 {
 	cmd_t	*cmd_1;
 
 	if (!str || !*str)
-		return ;
+		return (0);
 	var->count++;
 	cmd_1 = (cmd_t *)malloc(sizeof(cmd_t));
 	cmd_1->next = NULL;
@@ -468,14 +471,19 @@ void	add_cmd(char *str, cmd_t **cmd, var_t *var)
 	cmd_1->fd[1] = 1;
 	if (cmd && *cmd)
 		my_pipe(*cmd, cmd_1);
-	parse_str(cmd_1, str, "output", '>');
-	parse_str(cmd_1, str, "input", '<');
+	if (!parse_str(cmd_1, str, "output", '>')
+		|| !parse_str(cmd_1, str, "input", '<'))
+	{
+		free(cmd_1);
+		return (0);
+	}
 	cmd_1->arg = ft_splir(str, ' ');
 	find_dollar(cmd_1->arg);
 	clear_quote(cmd_1->arg);
 	reset_empty_line(cmd_1);
 	if (!*cmd)
 		*cmd = cmd_1;
+	return (1);
 }
 
 void	del_heredoc(cmd_t *cmd)
@@ -539,17 +547,21 @@ int	buildin(cmd_t *cmd, char **envp)
 		return (1);
 }
 
-void	dev_cmd(char **s, char **ptr, cmd_t **cmd, var_t *var, quote_t *quote)
+int	dev_cmd(char **s, char **ptr, cmd_t **cmd, var_t *var, quote_t *quote)
 {
 	char	*dst;
 
 	if (*ptr == *s || *(++*ptr) == '|')
-		return ;
+		return (0);
 	dst = (char *)malloc(*ptr - *s);
 	if (!dst)
-		return ;
+		return (0);
 	ft_strlcpy(dst, *s, *ptr - *s);
-		add_cmd(dst, cmd, var);
+	if (add_cmd(dst, cmd, var))
+	{
+		free(dst);
+		return (0);
+	}
 	free(dst);
 	*s = *ptr;
 	*ptr = ft_strchr(*s, '|');
@@ -571,7 +583,11 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 	while (quote > 0 && ptr)
 	{
 		while (ptr && ptr < quote->start)
-			dev_cmd(&s, &ptr, cmd, var, quote);
+			if (!dev_cmd(&s, &ptr, cmd, var, quote))
+			{ 
+				free(quote);
+				return (0);
+			}
 		if (ptr)
 			ptr = ft_strchr(quote->end, '|');
 		quote_1 = quote;
@@ -584,17 +600,21 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 		return (0);
 	}
 	while(ptr)
-		dev_cmd(&s, &ptr, cmd, var, quote);
-	add_cmd(s, cmd, var);
+	{
+		if (!dev_cmd(&s, &ptr, cmd, var, quote))
+			return (0);
+	}
+	if (!add_cmd(s, cmd, var))
+		return (0);
 	return (1);
 }
 
 void	run(cmd_t *cmd, var_t *vari, char **envp)
 {
 	if (dup2(cmd->fd[1], 1) == -1)
-		perror("dup2");
+		perror("msh");
 	if (dup2(cmd->fd[0], 0) == -1)
-		perror("dup2");
+		perror("msh");
 	if (cmd->fd[0])
 		close(cmd->fd[0]);
 	if (cmd->fd[1] > 1)
@@ -655,6 +675,7 @@ void	change_shlvl(char **envp)
 			num = ft_atoi(ptr + 1);
 			num++;
 			num_a = ft_itoa(num);
+			free(*envp);
 			*envp = ft_strjoin("SHLVL=", num_a);
 			free(num_a);
 			return ;
@@ -663,10 +684,13 @@ void	change_shlvl(char **envp)
 	}
 }
 
-void	my_alloc(char **env)
+void	my_alloc(char **en)
 {
-	while (env && *env)
-		*env = ft_strdup(*(env++));
+	while (en && *en)
+	{
+		*en = ft_strdup(*(en));
+		en++;
+	}
 }
 
 int main(int ac, char **av, char **envp)

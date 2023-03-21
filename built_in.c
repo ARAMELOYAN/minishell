@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/20 12:20:43 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/21 14:04:41 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ int	valid_identifier(char *arg, char **envp)
 			|| ((!ft_isalnum(arg[i]) && arg[i] != '_' && arg[i] != '+')
 			|| (arg[i] == '+' && arg[i + 1] != '=')))
 			return (0);
+	return (1);
 }
 
 void	unset(cmd_t *cmd, char **e)
@@ -79,6 +80,7 @@ void	print_export_formatted_env(char **env)
 int	valid(char *arg, char **envp)
 {
 	char	*ptr;
+	char	**temp;
 
 	if (!valid_identifier(arg, envp))
 		return (0);
@@ -94,11 +96,21 @@ int	valid(char *arg, char **envp)
 				if (*ptr == '+')
 				{
 					if (!ft_strchr(*envp, '='))
+					{
+						temp = *envp;
 						*envp = ft_strjoin(*envp, "=");
+						free(temp);
+					}
+					temp = *envp;
 					*envp = ft_strjoin(*envp, ptr + 2);
+					free(temp);
 				}
 				else 
+				{
+					temp = *envp;
 					*envp = ft_strdup(arg);
+					free(temp);
+				}
 				break ;
 			}
 		}
@@ -110,7 +122,9 @@ int	valid(char *arg, char **envp)
 	{
 		if (ptr && *ptr == '+')
 			ft_memmove(ptr, ptr + 1, ft_strlen(ptr));
+		temp = *envp;
 		*envp = ft_strdup(arg);
+		free(temp);
 		*(++envp) = NULL;
 	}
 	return (1);
@@ -166,9 +180,7 @@ int cd(cmd_t *cmd, char **envp)
 	{
 		cmd->arg--;
 		if (!getenv("HOME") || chdir(getenv("HOME")) == -1)
-		{
 			ft_putstr_fd("msh: cd: HOME not set\n", 2);
-		}
 		else
 			manevr(envp);
 	}
