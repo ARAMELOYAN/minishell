@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/14 18:12:13 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/21 18:56:00 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ typedef struct	cmd
 {
 	char		**arg;
 	char		**infile;
-	int			fd[2];
+	int			fd[3];
 	int			hd;
 	struct cmd	*next;
 }	cmd_t;
@@ -59,6 +59,7 @@ typedef struct	var
 	char 		*file;
 	char 		*file_1;
 	char		buffer[200];
+	int			redir_error;;
 	int			open_dollar;
 	int			iter_i;
 	int			iter_j;
@@ -66,6 +67,7 @@ typedef struct	var
 	int			fd;
 	int			fd_input;
 	int			fd_output;
+	int			fd_err;
 }	var_t;
 
 struct dirent	*entity;

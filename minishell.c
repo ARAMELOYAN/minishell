@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/21 18:18:39 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/21 18:55:57 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -177,9 +177,17 @@ int	redir_output(cmd_t *cmd, var_t *var, int i)
 	free(var->file);
 	if (var->fd == -1)
 		return (1);
-	if (cmd->fd[1] > 1)
+	if (var->redir_error)
+	{
+		if (cmd->fd[2] > 2)
+			close(cmd->fd[2]);
+		cmd->fd[2] = var->fd;
+	}
+	else if (cmd->fd[1] > 1)
+	{
 		close(cmd->fd[1]);
-	cmd->fd[1] = var->fd;
+		cmd->fd[1] = var->fd;
+	}
 	return (0);
 }
 
@@ -207,7 +215,7 @@ void	find_key(char *str, var_t *var)
 	{
 		var->ptr = next_special(quote->end);
 		quote_1 = quote;
-		quote = get_quote(quote->end + 1);//memory leak
+		quote = get_quote(quote->end + 1);
 		free(quote_1);
 	}
 	if (quote > 0)
@@ -469,6 +477,7 @@ int	add_cmd(char *str, cmd_t **cmd, var_t *var)
 	cmd_1->hd = 0;
 	cmd_1->fd[0] = 0;
 	cmd_1->fd[1] = 1;
+	cmd_1->fd[2] = 2;
 	if (cmd && *cmd)
 		my_pipe(*cmd, cmd_1);
 	if (!parse_str(cmd_1, str, "output", '>')
@@ -513,6 +522,8 @@ cmd_t	*del_cmd(cmd_t *cmd, var_t *var)
 		close(cmd->fd[0]);
 	if (cmd->fd[1] > 1)
 		close(cmd->fd[1]);
+	if (cmd->fd[2] > 2)
+		close(cmd->fd[2]);
 	if (cmd->hd)
 		del_heredoc(cmd);
 	cmd_1 = cmd->next;
@@ -611,6 +622,8 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 
 void	run(cmd_t *cmd, var_t *vari, char **envp)
 {
+	if (dup2(cmd->fd[2], 2) == -1)
+		perror("msh");
 	if (dup2(cmd->fd[1], 1) == -1)
 		perror("msh");
 	if (dup2(cmd->fd[0], 0) == -1)
@@ -619,6 +632,8 @@ void	run(cmd_t *cmd, var_t *vari, char **envp)
 		close(cmd->fd[0]);
 	if (cmd->fd[1] > 1)
 		close(cmd->fd[1]);
+	if (cmd->fd[2] > 2)
+		close(cmd->fd[2]);
 	if (!buildin(cmd, envp) && !exec(cmd, envp))
 	{
 		errno = 127;
@@ -638,6 +653,9 @@ int	funk(cmd_t *cmd, var_t *var, char **envp)
 	var->fd_output = dup(1);
 	if (var->fd_output == -1)
 		perror("msh");
+	var->fd_err = dup(2);
+	if (var->fd_err == -1)
+		perror("msh");
 	while (cmd)
 	{
 		if (var->count > 1)
@@ -655,8 +673,10 @@ int	funk(cmd_t *cmd, var_t *var, char **envp)
 			run(cmd, var, envp);
 		dup2(var->fd_input, 0);
 		dup2(var->fd_output, 1);
+		dup2(var->fd_err, 2);
 		close(var->fd_input);
 		close(var->fd_output);
+		close(var->fd_err);
 		cmd = del_cmd(cmd, var);
 	}
 }
