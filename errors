@@ -1,5 +1,3 @@
-echo asdk"
-err redir
 env | grep _=
 cat /dev/random | head -c 100 | wc -c
 export a=nenie'iri

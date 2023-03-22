@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/21 18:55:57 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/22 17:14:48 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ static char	**init(char **mat, char *s, char c)
 		{
 			p_end = &s[++i];
 		}
-		while (quote > 0 && p_end > quote->start)
+		while (quote > 3 &&  p_end > quote->start)
 		{
 			p_end = my_min(ft_strchr(quote->end, ' '), ft_strchr(quote->end, '\0'));
 			quote_1 = quote;
@@ -207,26 +207,27 @@ void	find_key(char *str, var_t *var)
 
 	var->ptr = next_special(str);
 	quote = get_quote(str);
-	if (quote > 0)
+	if (quote > 3)
 		var->open_dollar = 0;
 	else
 		var->open_dollar = 1;
-	while (quote > 0 && var->ptr == quote->start)
+	while (quote > 3 && var->ptr == quote->start)
 	{
 		var->ptr = next_special(quote->end);
 		quote_1 = quote;
 		quote = get_quote(quote->end + 1);
 		free(quote_1);
 	}
-	if (quote > 0)
+	if (quote > 3)
 		free(quote);
 }
 
-int my_open(cmd_t *cmd, char *str, int i, char *motiv)
+int my_open(cmd_t *cmd, char *str, int i, char *motiv, int red)
 {
 	var_t	var;
 	char	*file[2];
 
+	var.redir_error = red;
 	file[1] = NULL;
 	if (str && *str)
 	{
@@ -252,6 +253,14 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 	var_t	var;
 
 	var.ptr = ft_strchr(str, ch);
+	if (var.ptr && *(var.ptr - 1) == '2')
+	{
+		ft_memmove(var.ptr - 1, var.ptr, ft_strlen(var.ptr) + 1);
+		if (*(--var.ptr) == '>')
+			var.redir_error = 1;
+		else
+			var.redir_error = 0;
+	}
 	while (var.ptr)
 	{
 		ft_memmove(var.ptr, var.ptr + 1, ft_strlen(var.ptr));
@@ -268,16 +277,18 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 		else if (!*(var.ptr) || !*(var.ptr + 1))
 		{
 			perror("SPECIAL 2");
+			return (0);
 		}
 		if (*(var.ptr) == ch)//depq: >>
 		{
 			ft_memmove(var.ptr, var.ptr + 1, ft_strlen(var.ptr));
-			my_open(cmd, var.ptr, 1, motiv);
+			my_open(cmd, var.ptr, 1, motiv, var.redir_error);
 		}
 		else
-			my_open(cmd, var.ptr, 0, motiv);//depq: >
+			my_open(cmd, var.ptr, 0, motiv, var.redir_error);//depq: >
 		var.ptr = ft_strchr(str, ch);
 	}
+	return (1);
 }
 
 void	my_pipe(cmd_t *cmd, cmd_t *cmd_1)
@@ -305,10 +316,10 @@ quote_t	*get_quote(char *ptr)
 	quote_t	*quote;
 
 	if (!ptr)
-		return (-2);
+		return (2);
 	quote = (quote_t *)malloc(sizeof(quote_t));
 	if (!quote)
-		return (-1);
+		return (1);
 	quote->start = ft_strchr(ptr, '\'');
 	quote->end = ft_strchr(ptr, '"');
 	if ((!quote->start && !quote->end))
@@ -326,7 +337,7 @@ quote_t	*get_quote(char *ptr)
 	if (!quote->end)
 	{
 		free(quote);
-		return (-3);
+		return (3);
 	}
 	return (quote);
 }
@@ -339,7 +350,7 @@ void	clear_quote(char **arg)
 	while (arg && *arg)
 	{
 		quote = get_quote(*arg);
-		while (quote > 0)
+		while (quote > 3)
 		{
 			ft_memmove(quote->start, quote->start + 1, ft_strlen(quote->start));
 			ft_memmove(quote->end - 1, quote->end, ft_strlen(quote->end) + 1);
@@ -397,12 +408,12 @@ void	replace_dollar(char **arg, quote_t **quote,  char **ptr)
 	if (ft_isalpha(*(*ptr + 1)) || *(*ptr + 1) == '?')
 	{
 		replace(arg, ptr);
-		if (quote > 0 && *quote > 0)
+		if (quote > 3 && *quote > 3)
 		{
 			free(*quote);
 			*quote = get_quote(*arg);
 		}
-		while (quote && *quote > 0 && (*quote)->end < *ptr)
+		while (quote && *quote > 3 && (*quote)->end < *ptr)
 		{
 			quote_1 = *quote;
 			*quote = get_quote((*quote)->end + 1);
@@ -423,21 +434,21 @@ void	find_dollar(char **arg)
 	{
 		ptr = ft_strchr(*arg, '$');
 		quote = get_quote(*arg);
-		while (ptr && quote > 0)
+		while (ptr && quote > 3)
 		{
-			while (ptr && quote > 0 && ptr < quote->start)
+			while (ptr && quote > 3 && ptr < quote->start)
 				replace_dollar(arg, &quote, &ptr);
-			while (ptr && quote > 0 && ptr > quote->start
+			while (ptr && quote > 3 && ptr > quote->start
 					&& ptr < quote->end && *quote->start == '"')
 				replace_dollar(arg, &quote, &ptr);
-			if (quote > 0 && *quote->end == '\'')
+			if (quote > 3 && *quote->end == '\'')
 			{
 				ptr = ft_strchr(quote->end, '$');
 				quote_1 = quote;
 				quote = get_quote(quote->end + 1);
 				free(quote_1);
 			}
-			while (ptr && quote > 0 && ptr > quote->end)
+			while (ptr && quote > 3 && ptr > quote->end)
 			{
 				quote_1 = quote;
 				quote = get_quote(quote->end + 1);
@@ -591,7 +602,7 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 	quote = get_quote(s);
 	if (quote == -1)
 		return (0);
-	while (quote > 0 && ptr)
+	while (quote > 3 && ptr)
 	{
 		while (ptr && ptr < quote->start)
 			if (!dev_cmd(&s, &ptr, cmd, var, quote))
@@ -713,6 +724,15 @@ void	my_alloc(char **en)
 	}
 }
 
+int	emptyline(char *ch)
+{
+	if (!ch || !*ch)
+		return (1);
+	while (*ch)
+		if (*(ch++) != ' ')
+			return (0);
+	return (1);
+}
 int main(int ac, char **av, char **envp)
 {
 	char	*ch;
@@ -726,8 +746,11 @@ int main(int ac, char **av, char **envp)
 	while (1)
 	{
 		ch = readline("\e[0;32mminishell \e[0;0m");
-		if (!ch || !*ch)
+		if (emptyline(ch))
+		{
+			free(ch);
 			continue ;
+		}
 		add_history(ch);
 		if (!check_serror(ch, &cmd, var))
 		{

@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/21 18:56:00 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/22 17:14:39 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,6 @@
 # include <stdio.h>
 # include <fcntl.h>
 # include <term.h>
-
-extern char	**environ;
 
 typedef struct	cmd
 {
@@ -59,7 +57,7 @@ typedef struct	var
 	char 		*file;
 	char 		*file_1;
 	char		buffer[200];
-	int			redir_error;;
+	int			redir_error;
 	int			open_dollar;
 	int			iter_i;
 	int			iter_j;
@@ -69,8 +67,5 @@ typedef struct	var
 	int			fd_output;
 	int			fd_err;
 }	var_t;
-
-struct dirent	*entity;
-
 
 #endif
