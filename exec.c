@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 16:16:45 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/18 11:30:36 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/25 17:56:00 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,7 @@
 int exec(cmd_t *cmd, char **envp)
 {
 	var_t	var;
-	int	statlog;
 
-	statlog = 2;
-	//command not foundo
 	if (fork() == 0)
 	{
 		if (!access(cmd->arg[0], X_OK))
@@ -44,8 +41,11 @@ int exec(cmd_t *cmd, char **envp)
 		exit (2);
 	}
 	else
-		wait(&statlog);
-	if (statlog == 512)
+		wait(&g_status);
+	if (g_status == 512)
+	{
+		printf("g_status_%d\n", g_status);
 		return (0);
+	}
 	return (1);
 }

@@ -2,4 +2,5 @@ env | grep _=
 cat /dev/random | head -c 100 | wc -c
 export a=nenie'iri
 echo $a
-echo asd"asda"'
+test
+cat < ls >

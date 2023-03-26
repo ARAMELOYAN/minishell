@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/21 14:04:41 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/23 20:03:44 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,12 +101,22 @@ int	valid(char *arg, char **envp)
 						*envp = ft_strjoin(*envp, "=");
 						free(temp);
 					}
+					else if (ptr - arg != ft_strchr(*envp, '=') - *envp)
+					{
+						envp++;
+						continue;
+					}
 					temp = *envp;
 					*envp = ft_strjoin(*envp, ptr + 2);
 					free(temp);
 				}
 				else 
 				{
+					if (ptr - arg != ft_strchr(*envp, '=') - *envp)
+					{
+						envp++;
+						continue;
+					}
 					temp = *envp;
 					*envp = ft_strdup(arg);
 					free(temp);
@@ -302,7 +312,7 @@ void exitm(cmd_t *cmd)
 		if (cmd->arg[2])
 		{
 			ft_putstr_fd("msh: exit: too many arguments\n", 2);
-			errno = 1;
+			g_status = 1;
 			return ;
 		}
 		exit(val);

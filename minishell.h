@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/22 17:14:39 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/25 20:38:08 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,12 +30,15 @@
 # include <fcntl.h>
 # include <term.h>
 
+int	g_status;
+
 typedef struct	cmd
 {
 	char		**arg;
 	char		**infile;
 	int			fd[3];
 	int			hd;
+	int			arg_count;
 	struct cmd	*next;
 }	cmd_t;
 

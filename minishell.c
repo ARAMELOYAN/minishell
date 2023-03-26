@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/22 17:14:48 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/03/26 15:52:55 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,9 +183,10 @@ int	redir_output(cmd_t *cmd, var_t *var, int i)
 			close(cmd->fd[2]);
 		cmd->fd[2] = var->fd;
 	}
-	else if (cmd->fd[1] > 1)
+	else 
 	{
-		close(cmd->fd[1]);
+		if (cmd->fd[1] > 1)
+			close(cmd->fd[1]);
 		cmd->fd[1] = var->fd;
 	}
 	return (0);
@@ -207,12 +208,10 @@ void	find_key(char *str, var_t *var)
 
 	var->ptr = next_special(str);
 	quote = get_quote(str);
-	if (quote > 3)
-		var->open_dollar = 0;
-	else
-		var->open_dollar = 1;
-	while (quote > 3 && var->ptr == quote->start)
+	var->open_dollar = 1;
+	while (quote > 3 && var->ptr >= quote->start)
 	{
+		var->open_dollar = 0;
 		var->ptr = next_special(quote->end);
 		quote_1 = quote;
 		quote = get_quote(quote->end + 1);
@@ -235,12 +234,12 @@ int my_open(cmd_t *cmd, char *str, int i, char *motiv, int red)
 		find_key(str, &var);
 		ft_memmove(str, var.ptr, ft_strlen(var.ptr) + 1);
 		find_key(var.file_1, &var);
-		*var.ptr = '\0';
+		*(var.ptr)  = '\0';
 		var.file = ft_strtrim(var.file_1, " \t\v\n");
 		free(var.file_1);
 		file[0] = var.file;
 		clear_quote(file);
-		if (!ft_strncmp(motiv, "output", 6))
+		if (!ft_strncmp(motiv, "output", 7))
 			return (redir_output(cmd, &var, i));
 		else if (!ft_strncmp(motiv, "input", 6))
 			return (redir_input(cmd, &var, i));
@@ -264,8 +263,8 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 	while (var.ptr)
 	{
 		ft_memmove(var.ptr, var.ptr + 1, ft_strlen(var.ptr));
-		if ((*(var.ptr) == ch && special(var.ptr + 1) && *(var.ptr + 1) != ' ')
-				|| (*(var.ptr) != ch && special(var.ptr) && *var.ptr != ' '))
+		if ((*(var.ptr) == ch && special(var.ptr + 1) && *(var.ptr + 1) != ' ' && *(var.ptr + 1) != '"' && *(var.ptr + 1) != '\'')
+				|| (*(var.ptr) != ch && special(var.ptr) && *var.ptr != ' ' && *(var.ptr) != '"' && *(var.ptr) != '\''))
 		{
 			ft_putstr_fd("msh: syntax error near unexpected token `", 2);
 			if (!*var.ptr)
@@ -382,7 +381,7 @@ void	replace(char **arg, char **ptr)
 	char	*err;
 
 	word = next_word(*ptr + 1);
-	err = ft_itoa(errno);
+	err = ft_itoa(g_status);
 	**ptr = '\0';
 	if (*(*ptr + 1) == '?')
 		arg_1 = ft_strjoin(*arg, err);
@@ -491,9 +490,10 @@ int	add_cmd(char *str, cmd_t **cmd, var_t *var)
 	cmd_1->fd[2] = 2;
 	if (cmd && *cmd)
 		my_pipe(*cmd, cmd_1);
-	if (!parse_str(cmd_1, str, "output", '>')
-		|| !parse_str(cmd_1, str, "input", '<'))
+	if (!parse_str(cmd_1, str, "input", '<')
+		|| !parse_str(cmd_1, str, "output", '>'))
 	{
+		g_status = 123;
 		free(cmd_1);
 		return (0);
 	}
@@ -579,7 +579,7 @@ int	dev_cmd(char **s, char **ptr, cmd_t **cmd, var_t *var, quote_t *quote)
 	if (!dst)
 		return (0);
 	ft_strlcpy(dst, *s, *ptr - *s);
-	if (add_cmd(dst, cmd, var))
+	if (!add_cmd(dst, cmd, var))
 	{
 		free(dst);
 		return (0);
@@ -587,6 +587,7 @@ int	dev_cmd(char **s, char **ptr, cmd_t **cmd, var_t *var, quote_t *quote)
 	free(dst);
 	*s = *ptr;
 	*ptr = ft_strchr(*s, '|');
+	return (1);
 }
 
 int	check_serror(char *s, cmd_t **cmd, var_t *var)
@@ -600,7 +601,7 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 	var->count = 0;
 	ptr = ft_strchr(s, '|');
 	quote = get_quote(s);
-	if (quote == -1)
+	if (quote == 1)
 		return (0);
 	while (quote > 3 && ptr)
 	{
@@ -616,9 +617,10 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 		quote = get_quote(quote->end + 1);
 		free(quote_1);
 	}
-	if (quote == -3)
+	if (quote == 3)
 	{
 		ft_putstr_fd("msh: syntax error near unexpected token `quote'\n", 2);
+		g_status = 258;
 		return (0);
 	}
 	while(ptr)
@@ -631,7 +633,7 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 	return (1);
 }
 
-void	run(cmd_t *cmd, var_t *vari, char **envp)
+void	run(cmd_t *cmd, var_t *var, char **envp)
 {
 	if (dup2(cmd->fd[2], 2) == -1)
 		perror("msh");
@@ -647,17 +649,21 @@ void	run(cmd_t *cmd, var_t *vari, char **envp)
 		close(cmd->fd[2]);
 	if (!buildin(cmd, envp) && !exec(cmd, envp))
 	{
-		errno = 127;
+		g_status = 127;
 		ft_putstr_fd("msh: ", 2);
 		ft_putstr_fd(cmd->arg[0], 2);
 		ft_putstr_fd(": command not found\n", 2);
 	}
 }
 
-int	funk(cmd_t *cmd, var_t *var, char **envp)
+void	funk(cmd_t *cmd, var_t *var, char **envp)
 {
-	int	pid;
+	cmd_t	*cmd_1;
+	var_t	var_1;
+	char	*temp;
+	int		pid;
 
+	cmd_1 = NULL;
 	var->fd_input = dup(0);
 	if (var->fd_input == -1)
 		perror("msh");
@@ -667,6 +673,10 @@ int	funk(cmd_t *cmd, var_t *var, char **envp)
 	var->fd_err = dup(2);
 	if (var->fd_err == -1)
 		perror("msh");
+	//add_cmd("export _=", &cmd_1, &var_1);
+	//export(cmd_1, envp);
+	//del_cmd(cmd_1, var);
+	//cmd->arg_count = 0;
 	while (cmd)
 	{
 		if (var->count > 1)
@@ -681,7 +691,14 @@ int	funk(cmd_t *cmd, var_t *var, char **envp)
 			}
 		}
 		else
+		{
 			run(cmd, var, envp);
+			//temp = ft_strjoin("export _=", cmd->arg[0]);
+			//add_cmd(temp, &cmd_1, &var_1);
+			//export(cmd_1, envp);
+			//del_cmd(cmd_1, var);
+			//free(temp);
+		}
 		dup2(var->fd_input, 0);
 		dup2(var->fd_output, 1);
 		dup2(var->fd_err, 2);
@@ -733,6 +750,7 @@ int	emptyline(char *ch)
 			return (0);
 	return (1);
 }
+
 int main(int ac, char **av, char **envp)
 {
 	char	*ch;
@@ -741,6 +759,7 @@ int main(int ac, char **av, char **envp)
 
 	cmd = NULL;
 	my_alloc(envp);
+	g_status = 0;
 	change_shlvl(envp);
 	var = (var_t *)malloc(sizeof(var_t));
 	while (1)
