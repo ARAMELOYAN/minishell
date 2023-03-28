@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/25 20:38:08 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/28 12:47:16 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,10 +50,7 @@ typedef struct	quote
 
 typedef struct	var
 {
-	DIR			*directory;
-	char 		**ex_inp_spl;
 	char 		**path_split;
-	char 		*env_line;
 	char		*cmd_path;
 	char 		*cmd_path_1;
 	char 		*ptr;

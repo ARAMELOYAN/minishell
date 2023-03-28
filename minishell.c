@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/26 15:52:55 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/28 14:56:27 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,15 +138,19 @@ int	heredoc(cmd_t *cmd, var_t *var)
 	while (1)
 	{
 		ch[0] = readline("heredoc> ");
+		if (!ch[0])
+			break ;
 		if (!ft_strncmp(ch[0], var->file, ft_strlen(ch[0]) + 1))
-			break;
+		{
+			free(ch[0]);
+			break ;
+		}
 		if (var->open_dollar == 1)
 			find_dollar(ch);
 		write(var->fd, ch[0], ft_strlen(ch[0]));
 		write(var->fd, "\n", 1);
 		free(ch[0]);
 	}
-	free(ch[0]);
 	close(var->fd);
 	var->fd = open(".heredoc", O_RDONLY);
 	cmd->hd = 1;
@@ -263,8 +267,10 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 	while (var.ptr)
 	{
 		ft_memmove(var.ptr, var.ptr + 1, ft_strlen(var.ptr));
-		if ((*(var.ptr) == ch && special(var.ptr + 1) && *(var.ptr + 1) != ' ' && *(var.ptr + 1) != '"' && *(var.ptr + 1) != '\'')
-				|| (*(var.ptr) != ch && special(var.ptr) && *var.ptr != ' ' && *(var.ptr) != '"' && *(var.ptr) != '\''))
+		if ((*(var.ptr) == ch && special(var.ptr + 1) && *(var.ptr + 1) != ' '
+				&& *(var.ptr + 1) != '"' && *(var.ptr + 1) != '\'')
+				|| (*(var.ptr) != ch && special(var.ptr) && *var.ptr != ' '
+					&& *(var.ptr) != '"' && *(var.ptr) != '\''))
 		{
 			ft_putstr_fd("msh: syntax error near unexpected token `", 2);
 			if (!*var.ptr)
@@ -456,6 +462,8 @@ void	find_dollar(char **arg)
 		}
 		while (ptr)
 			replace_dollar(arg, NULL, &ptr);
+		if (quote > 3)
+			free(quote);
 		arg++;
 	}
 }
@@ -623,6 +631,8 @@ int	check_serror(char *s, cmd_t **cmd, var_t *var)
 		g_status = 258;
 		return (0);
 	}
+	if (quote > 3)
+		free(quote);
 	while(ptr)
 	{
 		if (!dev_cmd(&s, &ptr, cmd, var, quote))
@@ -673,10 +683,10 @@ void	funk(cmd_t *cmd, var_t *var, char **envp)
 	var->fd_err = dup(2);
 	if (var->fd_err == -1)
 		perror("msh");
-	//add_cmd("export _=", &cmd_1, &var_1);
-	//export(cmd_1, envp);
-	//del_cmd(cmd_1, var);
-	//cmd->arg_count = 0;
+	add_cmd("export _=/usr/bin/env", &cmd_1, &var_1);
+	export(cmd_1, envp);
+	del_cmd(cmd_1, var);
+	cmd->arg_count = 0;
 	while (cmd)
 	{
 		if (var->count > 1)
@@ -692,12 +702,12 @@ void	funk(cmd_t *cmd, var_t *var, char **envp)
 		}
 		else
 		{
+			temp = ft_strjoin("export _=", cmd->arg[0]);
+			add_cmd(temp, &cmd_1, &var_1);
+			export(cmd_1, envp);
+			del_cmd(cmd_1, var);
+			free(temp);
 			run(cmd, var, envp);
-			//temp = ft_strjoin("export _=", cmd->arg[0]);
-			//add_cmd(temp, &cmd_1, &var_1);
-			//export(cmd_1, envp);
-			//del_cmd(cmd_1, var);
-			//free(temp);
 		}
 		dup2(var->fd_input, 0);
 		dup2(var->fd_output, 1);
@@ -743,12 +753,20 @@ void	my_alloc(char **en)
 
 int	emptyline(char *ch)
 {
-	if (!ch || !*ch)
+	if (!*ch)
 		return (1);
 	while (*ch)
 		if (*(ch++) != ' ')
 			return (0);
 	return (1);
+}
+
+void	handler(int sig)
+{
+	rl_on_new_line();
+	rl_replace_line("", 0);
+	rl_redisplay();
+	(void) sig;
 }
 
 int main(int ac, char **av, char **envp)
@@ -761,26 +779,36 @@ int main(int ac, char **av, char **envp)
 	my_alloc(envp);
 	g_status = 0;
 	change_shlvl(envp);
-	var = (var_t *)malloc(sizeof(var_t));
+	signal(SIGQUIT, SIG_IGN);
+	signal(SIGINT, handler);
 	while (1)
 	{
+		var = (var_t *)malloc(sizeof(var_t));
 		ch = readline("\e[0;32mminishell \e[0;0m");
+		if (!ch)
+		{
+			free(var);
+			ft_putstr_fd("exit\n", 1);
+			exit (g_status);
+		}
 		if (emptyline(ch))
 		{
 			free(ch);
+			free(var);
 			continue ;
 		}
 		add_history(ch);
 		if (!check_serror(ch, &cmd, var))
 		{
 			free(ch);
+			free(var);
 			continue ;
 		}
 		funk(cmd, var, envp);
 		while (var->count--)
 			wait(NULL);
 		free(ch);
-	}
 	free(var);
+	}
 	return (0);
 }
