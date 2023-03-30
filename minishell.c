@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/28 14:56:27 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/30 15:38:21 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,23 @@ quote_t	*get_quote(char *ptr);
 void	print_cmd(cmd_t *cmd);
 void	clear_quote(char **arg);
 void    find_dollar(char **arg);
+
+void	handler(int sig)
+{
+	//rl_catch_signals = 0;
+	write(1, "\n", 1);
+	rl_on_new_line();
+	rl_replace_line("", 0);
+	rl_redisplay();
+}
+
+void	hd_handler(int sig)
+{
+	g_status = 1200;
+	//write(1, "\rheredoc>   ", 12);
+	ioctl(STDIN_FILENO, TIOCSTI, "\n");
+	rl_on_new_line();
+}
 
 char	*my_min(char *p1, char *p2)
 {
@@ -133,11 +150,19 @@ int	heredoc(cmd_t *cmd, var_t *var)
 {
 	char 	*ch[2];
 
+	signal(SIGINT, SIG_IGN);
 	var->fd = open(".heredoc", O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	ch[1] = NULL;
-	while (1)
+	while (g_status != 1200)
 	{
+		signal(SIGINT, hd_handler);
 		ch[0] = readline("heredoc> ");
+		if (g_status == 1200)
+		{
+			g_status = 0;
+			free(ch[0]);
+			break ;
+		}
 		if (!ch[0])
 			break ;
 		if (!ft_strncmp(ch[0], var->file, ft_strlen(ch[0]) + 1))
@@ -151,6 +176,7 @@ int	heredoc(cmd_t *cmd, var_t *var)
 		write(var->fd, "\n", 1);
 		free(ch[0]);
 	}
+	signal(SIGINT, handler);
 	close(var->fd);
 	var->fd = open(".heredoc", O_RDONLY);
 	cmd->hd = 1;
@@ -761,14 +787,6 @@ int	emptyline(char *ch)
 	return (1);
 }
 
-void	handler(int sig)
-{
-	rl_on_new_line();
-	rl_replace_line("", 0);
-	rl_redisplay();
-	(void) sig;
-}
-
 int main(int ac, char **av, char **envp)
 {
 	char	*ch;
@@ -779,6 +797,8 @@ int main(int ac, char **av, char **envp)
 	my_alloc(envp);
 	g_status = 0;
 	change_shlvl(envp);
+	//rl_catch_signals = 0;
+	//rl_done = 0;
 	signal(SIGQUIT, SIG_IGN);
 	signal(SIGINT, handler);
 	while (1)

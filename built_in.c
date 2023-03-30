@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/28 13:08:15 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/28 18:09:21 by tumolabs         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,9 @@ int	valid_identifier(char *arg, char **envp)
 
 	i = -1;
 	if (arg && arg[0] == '=')
+	{
 		return (0);
+	}
 	while (arg && arg[++i] && arg[i] != '=')
 		if ((i == 0 && (!ft_isalpha(arg[i]) && arg[i] != '_'))
 			|| ((!ft_isalnum(arg[i]) && arg[i] != '_' && arg[i] != '+')
@@ -144,6 +146,8 @@ void	export(cmd_t *cmd, char **envp)
 {
 	char	**temp;
 
+	if (!cmd)
+		return ;
 	temp = cmd->arg;
 	if (!*(++temp))
 		print_export_formatted_env(envp);
@@ -151,7 +155,7 @@ void	export(cmd_t *cmd, char **envp)
 	{
 		if (!valid(*temp, envp))
 		{
-			errno = 1;
+			g_status = 1;
 			ft_putstr_fd("msh: export: `", 2);
 			ft_putstr_fd(*temp, 2);
 			ft_putstr_fd("': not a valid identifier\n", 2);
