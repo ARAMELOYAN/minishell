@@ -6,11 +6,12 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 16:16:45 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/25 17:56:00 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/04/02 19:23:56 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
+
 
 int exec(cmd_t *cmd, char **envp)
 {
@@ -38,14 +39,12 @@ int exec(cmd_t *cmd, char **envp)
 			}
 			var.iter_i++;
 		}
-		exit (2);
+		exit (127);
 	}
 	else
 		wait(&g_status);
-	if (g_status == 512)
-	{
-		printf("g_status_%d\n", g_status);
+	g_status %= 255;
+	if (g_status == 127)
 		return (0);
-	}
 	return (1);
 }

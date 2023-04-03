@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/30 15:38:21 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/04/03 18:52:51 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,61 @@
 quote_t	*get_quote(char *ptr);
 void	print_cmd(cmd_t *cmd);
 void	clear_quote(char **arg);
-void    find_dollar(char **arg);
+void    find_dollar(char **arg, char **envp);
+
+int		get_lines(char **arg)
+{
+	int	i;
+
+	i = 0;
+	if (!arg || !*arg)
+		return (0);
+	while (arg[++i])
+		;
+	return (i);
+}
+
+char	*my_getenv(char **env, char *key)
+{
+	char	*temp;
+
+	if (!env || !*env)
+		return (0);
+	while (*env)
+	{
+		temp = ft_strjoin(key, "=");
+		if (!ft_strncmp(*env, temp, ft_strlen(temp)))
+		{
+			free(temp);
+			return (ft_strchr(*env, '=') + 1);
+		}
+		free(temp);
+		env++;
+	}
+	return (0);
+}
+
+void	INT_handler_exec(int sig)
+{
+}
+
+void	INT_handler_fork(int sig)
+{
+	write(1, "\n", 1);
+}
+
+void	QUIT_handler_exec(int sig)
+{
+}
+
+void	QUIT_handler_fork(int sig)
+{
+	g_status = 131;
+	write(1, "Quit: 3\n", 8);
+}
 
 void	handler(int sig)
 {
-	//rl_catch_signals = 0;
 	write(1, "\n", 1);
 	rl_on_new_line();
 	rl_replace_line("", 0);
@@ -29,8 +79,9 @@ void	handler(int sig)
 void	hd_handler(int sig)
 {
 	g_status = 1200;
-	//write(1, "\rheredoc>   ", 12);
+	write(1, "\n", 1);
 	ioctl(STDIN_FILENO, TIOCSTI, "\n");
+	rl_replace_line("", 0);
 	rl_on_new_line();
 }
 
@@ -108,7 +159,7 @@ static char	**init(char **mat, char *s, char c)
 			quote_1 = quote;
 			quote = get_quote(quote->end + 1);
 			free(quote_1);
-			i = p_end - s;// stex kaskac ka
+			i = p_end - s;
 		}
 		if (p_start < p_end)
 			mat[j] = ft_substr(s, p_start - s, p_end - p_start);
@@ -160,6 +211,9 @@ int	heredoc(cmd_t *cmd, var_t *var)
 		if (g_status == 1200)
 		{
 			g_status = 0;
+			signal(SIGINT, handler);
+			close(var->fd);
+			var->fd = open(".heredoc", O_RDONLY | O_TRUNC);
 			free(ch[0]);
 			break ;
 		}
@@ -171,7 +225,7 @@ int	heredoc(cmd_t *cmd, var_t *var)
 			break ;
 		}
 		if (var->open_dollar == 1)
-			find_dollar(ch);
+			find_dollar(ch, var->envp);
 		write(var->fd, ch[0], ft_strlen(ch[0]));
 		write(var->fd, "\n", 1);
 		free(ch[0]);
@@ -256,6 +310,7 @@ int my_open(cmd_t *cmd, char *str, int i, char *motiv, int red)
 	var_t	var;
 	char	*file[2];
 
+	var.envp = NULL;
 	var.redir_error = red;
 	file[1] = NULL;
 	if (str && *str)
@@ -280,33 +335,51 @@ int my_open(cmd_t *cmd, char *str, int i, char *motiv, int red)
 int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 {
 	var_t	var;
+	quote_t *quote;
+	quote_t *quote_1;
 
 	var.ptr = ft_strchr(str, ch);
-	if (var.ptr && *(var.ptr - 1) == '2')
-	{
-		ft_memmove(var.ptr - 1, var.ptr, ft_strlen(var.ptr) + 1);
-		if (*(--var.ptr) == '>')
-			var.redir_error = 1;
-		else
-			var.redir_error = 0;
-	}
+	printf("%s\n", str);
+	quote = get_quote(str);
 	while (var.ptr)
 	{
+		while (quote > 3 &&  var.ptr > quote->start)
+		{
+			var.ptr = ft_strchr(quote->end, ch);
+			quote_1 = quote;
+			quote = get_quote(quote->end + 1);
+			free(quote_1);
+		}
+		if (quote > 3)
+			free(quote);
+		if (!var.ptr)
+			break ;
+		if (var.ptr && *(var.ptr - 1) == '2')
+		{
+			ft_memmove(var.ptr - 1, var.ptr, ft_strlen(var.ptr) + 1);
+			if (*(--var.ptr) == '>')
+				var.redir_error = 1;
+			else
+				var.redir_error = 0;
+		}
 		ft_memmove(var.ptr, var.ptr + 1, ft_strlen(var.ptr));
 		if ((*(var.ptr) == ch && special(var.ptr + 1) && *(var.ptr + 1) != ' '
 				&& *(var.ptr + 1) != '"' && *(var.ptr + 1) != '\'')
 				|| (*(var.ptr) != ch && special(var.ptr) && *var.ptr != ' '
-					&& *(var.ptr) != '"' && *(var.ptr) != '\''))
+					&& *(var.ptr) != '"' && *(var.ptr) != '\'')
+				|| (*var.ptr == ' ' && special(var.ptr + 1)
+				&& *(var.ptr + 1) != '"' && *(var.ptr + 1) != '\''))
 		{
 			ft_putstr_fd("msh: syntax error near unexpected token `", 2);
 			if (!*var.ptr)
 				ft_putstr_fd("newline", 2);
-			ft_putchar_fd(*var.ptr, 2);
+			ft_putchar_fd(*(++var.ptr), 2);
 			ft_putstr_fd("'\n", 2);
 			return (0);
 		}
 		else if (!*(var.ptr) || !*(var.ptr + 1))
 		{
+			printf("%s\n", var.ptr);
 			perror("SPECIAL 2");
 			return (0);
 		}
@@ -318,7 +391,10 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 		else
 			my_open(cmd, var.ptr, 0, motiv, var.redir_error);//depq: >
 		var.ptr = ft_strchr(str, ch);
+		quote = get_quote(str);
 	}
+	if (quote > 3)
+		free(quote);
 	return (1);
 }
 
@@ -397,15 +473,15 @@ char	*next_word(char *str)
 {
 	int	i;
 
-	i = -1;
+	i = 0;
 	if (*str == '?')
 		return (ft_substr(str, 0, 1));
-	while (ft_isalnum(str[++i]))
-			;
+	while (ft_isalnum(str[i]) || str[i] == '_')
+			i++;
 	return (ft_substr(str, 0, i));
 }
 
-void	replace(char **arg, char **ptr)
+void	replace(char **arg, char **ptr, char **envp)
 {
 	char	*temp;
 	char	*word;
@@ -417,8 +493,8 @@ void	replace(char **arg, char **ptr)
 	**ptr = '\0';
 	if (*(*ptr + 1) == '?')
 		arg_1 = ft_strjoin(*arg, err);
-	else if (getenv(word))
-		arg_1 = ft_strjoin(*arg, getenv(word));
+	else if (my_getenv(envp, word))
+		arg_1 = ft_strjoin(*arg, my_getenv(envp, word));
 	else
 		arg_1 = ft_strdup(*arg);
 	temp = ft_strjoin(arg_1, *ptr + ft_strlen(word) + 1);
@@ -432,14 +508,14 @@ void	replace(char **arg, char **ptr)
 		*ptr = ft_strchr(*ptr + 1, '$');
 }
 
-void	replace_dollar(char **arg, quote_t **quote,  char **ptr)
+void	replace_dollar(char **arg, quote_t **quote,  char **ptr, char **envp)
 {
 	quote_t	*quote_1;
 
-	if (ft_isalpha(*(*ptr + 1)) || *(*ptr + 1) == '?')
+	if (ft_isalpha(*(*ptr + 1)) || *(*ptr + 1) == '?' || *(*ptr + 1) == '_')
 	{
-		replace(arg, ptr);
-		if (quote > 3 && *quote > 3)
+		replace(arg, ptr, envp);
+		if (quote && *quote > 3)
 		{
 			free(*quote);
 			*quote = get_quote(*arg);
@@ -455,7 +531,7 @@ void	replace_dollar(char **arg, quote_t **quote,  char **ptr)
 		*ptr = ft_strchr(*ptr + 1, '$');
 }
 
-void	find_dollar(char **arg)
+void	find_dollar(char **arg, char **envp)
 {
 	quote_t	*quote;
 	quote_t	*quote_1;
@@ -468,10 +544,10 @@ void	find_dollar(char **arg)
 		while (ptr && quote > 3)
 		{
 			while (ptr && quote > 3 && ptr < quote->start)
-				replace_dollar(arg, &quote, &ptr);
+				replace_dollar(arg, &quote, &ptr, envp);
 			while (ptr && quote > 3 && ptr > quote->start
 					&& ptr < quote->end && *quote->start == '"')
-				replace_dollar(arg, &quote, &ptr);
+				replace_dollar(arg, &quote, &ptr, envp);
 			if (quote > 3 && *quote->end == '\'')
 			{
 				ptr = ft_strchr(quote->end, '$');
@@ -487,7 +563,7 @@ void	find_dollar(char **arg)
 			}
 		}
 		while (ptr)
-			replace_dollar(arg, NULL, &ptr);
+			replace_dollar(arg, NULL, &ptr, envp);
 		if (quote > 3)
 			free(quote);
 		arg++;
@@ -532,7 +608,7 @@ int	add_cmd(char *str, cmd_t **cmd, var_t *var)
 		return (0);
 	}
 	cmd_1->arg = ft_splir(str, ' ');
-	find_dollar(cmd_1->arg);
+	find_dollar(cmd_1->arg, var->envp);
 	clear_quote(cmd_1->arg);
 	reset_empty_line(cmd_1);
 	if (!*cmd)
@@ -712,7 +788,8 @@ void	funk(cmd_t *cmd, var_t *var, char **envp)
 	add_cmd("export _=/usr/bin/env", &cmd_1, &var_1);
 	export(cmd_1, envp);
 	del_cmd(cmd_1, var);
-	cmd->arg_count = 0;
+	signal(SIGQUIT, QUIT_handler_fork);
+	signal(SIGINT, INT_handler_fork);
 	while (cmd)
 	{
 		if (var->count > 1)
@@ -722,13 +799,15 @@ void	funk(cmd_t *cmd, var_t *var, char **envp)
 				perror("msh");
 			else if (pid == 0)
 			{
+			signal(SIGQUIT, QUIT_handler_exec);
+			signal(SIGINT, INT_handler_exec);
 				run(cmd, var, envp);
 				exit(0);
 			}
 		}
 		else
 		{
-			temp = ft_strjoin("export _=", cmd->arg[0]);
+			temp = ft_strjoin("export _=", cmd->arg[get_lines(cmd->arg) - 1]);
 			add_cmd(temp, &cmd_1, &var_1);
 			export(cmd_1, envp);
 			del_cmd(cmd_1, var);
@@ -797,13 +876,14 @@ int main(int ac, char **av, char **envp)
 	my_alloc(envp);
 	g_status = 0;
 	change_shlvl(envp);
-	//rl_catch_signals = 0;
-	//rl_done = 0;
-	signal(SIGQUIT, SIG_IGN);
-	signal(SIGINT, handler);
+	rl_catch_signals = 0;
+	rl_done = 0;
 	while (1)
 	{
+		signal(SIGQUIT, SIG_IGN);
+		signal(SIGINT, handler);
 		var = (var_t *)malloc(sizeof(var_t));
+		var->envp = envp;
 		ch = readline("\e[0;32mminishell \e[0;0m");
 		if (!ch)
 		{

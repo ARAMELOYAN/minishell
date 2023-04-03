@@ -6,15 +6,15 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/29 19:47:20 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/31 13:01:19 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef MINISHELL_H
 # define MINISHELL_H
 
-# include "readline/readline.h"
-# include "readline/history.h"
+# include "readline-master/readline.h"
+# include "readline-master/history.h"
 # include "libft/libft.h"
 # include <sys/ioctl.h>
 # include <sys/wait.h>
@@ -50,6 +50,7 @@ typedef struct	quote
 
 typedef struct	var
 {
+	char		**envp;
 	char 		**path_split;
 	char		*cmd_path;
 	char 		*cmd_path_1;

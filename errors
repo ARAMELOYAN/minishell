@@ -1,6 +1,17 @@
 env | grep _=
+
 cat /dev/random | head -c 100 | wc -c
-export a=nenie'iri
+
+echo > <
+
+export a="nenie'iri"
 echo $a
-test
-cat < ls >
+
+export IFS=_
+export a=nenie_iri
+touch $a
+
+mkdir -p a/b
+cd a/b
+rm -rf ../../a
+cd ../

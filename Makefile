@@ -19,7 +19,7 @@ $(NAME): $(OBJS)
 	$(MAKE) bonus -C ./libft
 	mv libft/libft.a .
 	$(MAKE) -C ./libft fclean
-	$(CC) $(OBJS) libft.a  -L./aeloyan-readline/lib  -lreadline -I./aeloyan-readline/include -o $(NAME)
+	$(CC) $(OBJS) -L. -lft  -L./aeloyan-readline/lib  -lreadline -I./aeloyan-readline/include -o $(NAME)
 
 all: $(NAME)
 

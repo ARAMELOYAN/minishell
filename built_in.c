@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/28 18:09:21 by tumolabs         ###   ########.fr       */
+/*   Updated: 2023/03/30 19:44:47 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,31 +231,24 @@ void echom(cmd_t *cmd)
 		else
 			nline = 0;
 	}
-	if (cmd->arg[var.iter_j])
+	while (cmd->arg[var.iter_j]
+		&& write(1, cmd->arg[var.iter_j], ft_strlen(cmd->arg[var.iter_j])))
 	{
-		while (cmd->arg[var.iter_j] && printf("%s", cmd->arg[var.iter_j]))
-		{
-			if (cmd->arg[++var.iter_j])
-				printf(" ");
-		}
-	}
-	else
-	{
-		while (cmd->arg[var.iter_j] && printf("%s", cmd->arg[var.iter_j]))
-		{
-			if (cmd->arg[++var.iter_j])
-				printf(" ");
-		}
+		if (cmd->arg[++var.iter_j])
+		ft_putchar_fd(' ', 1);
 	}
 	if (nline)
-		printf("\n");
+		ft_putchar_fd('\n', 1);
 }
 
 void	env(char **envp)
 {
 	while (*envp)
 		if (ft_strchr(*envp, '='))
-			printf("%s\n", *envp++);
+		{
+			ft_putstr_fd(*envp++, 1);
+			ft_putstr_fd("\n", 1);
+		}
 		else
 		{
 			++envp;
