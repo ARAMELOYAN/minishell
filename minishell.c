@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/03 18:52:51 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/04 21:14:43 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,18 +16,6 @@ quote_t	*get_quote(char *ptr);
 void	print_cmd(cmd_t *cmd);
 void	clear_quote(char **arg);
 void    find_dollar(char **arg, char **envp);
-
-int		get_lines(char **arg)
-{
-	int	i;
-
-	i = 0;
-	if (!arg || !*arg)
-		return (0);
-	while (arg[++i])
-		;
-	return (i);
-}
 
 char	*my_getenv(char **env, char *key)
 {
@@ -339,7 +327,6 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 	quote_t *quote_1;
 
 	var.ptr = ft_strchr(str, ch);
-	printf("%s\n", str);
 	quote = get_quote(str);
 	while (var.ptr)
 	{
@@ -379,7 +366,6 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 		}
 		else if (!*(var.ptr) || !*(var.ptr + 1))
 		{
-			printf("%s\n", var.ptr);
 			perror("SPECIAL 2");
 			return (0);
 		}
@@ -429,24 +415,22 @@ quote_t	*get_quote(char *ptr)
 		return (1);
 	quote->start = ft_strchr(ptr, '\'');
 	quote->end = ft_strchr(ptr, '"');
-	if ((!quote->start && !quote->end))
+	if ((quote->start || quote->end))
 	{
-		free(quote);
-		return (0);
-	}
-	if (quote->start && (quote->start < quote->end || !quote->end))
-		quote->end = ft_strchr(quote->start + 1, '\'');
-	else
-	{
-		quote->start = quote->end;
-		quote->end = ft_strchr(quote->start + 1, '"');
-	}
-	if (!quote->end)
-	{
+		if (quote->start && (quote->start < quote->end || !quote->end))
+			quote->end = ft_strchr(quote->start + 1, '\'');
+		else
+		{
+			quote->start = quote->end;
+			quote->end = ft_strchr(quote->start + 1, '"');
+		}
+		if (quote->end)
+			return (quote);
 		free(quote);
 		return (3);
 	}
-	return (quote);
+	free(quote);
+	return (0);
 }
 
 void	clear_quote(char **arg)
@@ -531,6 +515,30 @@ void	replace_dollar(char **arg, quote_t **quote,  char **ptr, char **envp)
 		*ptr = ft_strchr(*ptr + 1, '$');
 }
 
+void	dollar_into_quote(char **ptr, char **arg, char **envp, quote_t **quote)
+{
+	quote_t	*quote_1;
+
+	while (*ptr && (*quote) > 3 && *ptr < (*quote)->start)
+		replace_dollar(arg, quote, ptr, envp);
+	while (*ptr && (*quote) > 3 && *ptr > (*quote)->start
+			&& *ptr < (*quote)->end && *(*quote)->start == '"')
+		replace_dollar(arg, quote, ptr, envp);
+	if ((*quote) > 3 && *(*quote)->end == '\'')
+	{
+		*ptr = ft_strchr((*quote)->end, '$');
+		quote_1 = (*quote);
+		(*quote) = get_quote((*quote)->end + 1);
+		free(quote_1);
+	}
+	while (*ptr && (*quote) > 3 && *ptr > (*quote)->end)
+	{
+		quote_1 = (*quote);
+		(*quote) = get_quote((*quote)->end + 1);
+		free(quote_1);
+	}
+}
+
 void	find_dollar(char **arg, char **envp)
 {
 	quote_t	*quote;
@@ -542,26 +550,7 @@ void	find_dollar(char **arg, char **envp)
 		ptr = ft_strchr(*arg, '$');
 		quote = get_quote(*arg);
 		while (ptr && quote > 3)
-		{
-			while (ptr && quote > 3 && ptr < quote->start)
-				replace_dollar(arg, &quote, &ptr, envp);
-			while (ptr && quote > 3 && ptr > quote->start
-					&& ptr < quote->end && *quote->start == '"')
-				replace_dollar(arg, &quote, &ptr, envp);
-			if (quote > 3 && *quote->end == '\'')
-			{
-				ptr = ft_strchr(quote->end, '$');
-				quote_1 = quote;
-				quote = get_quote(quote->end + 1);
-				free(quote_1);
-			}
-			while (ptr && quote > 3 && ptr > quote->end)
-			{
-				quote_1 = quote;
-				quote = get_quote(quote->end + 1);
-				free(quote_1);
-			}
-		}
+			dollar_into_quote(ptr, arg, envp, quote);
 		while (ptr)
 			replace_dollar(arg, NULL, &ptr, envp);
 		if (quote > 3)
@@ -585,25 +574,30 @@ void	reset_empty_line(cmd_t *cmd)
 	}
 }
 
+void	cmd_init(cmd_t **cmd)
+{
+	*cmd = (cmd_t *)malloc(sizeof(cmd_t));
+	(*cmd)->next = NULL;
+	(*cmd)->hd = 0;
+	(*cmd)->fd[0] = 0;
+	(*cmd)->fd[1] = 1;
+	(*cmd)->fd[2] = 2;
+}
+
 int	add_cmd(char *str, cmd_t **cmd, var_t *var)
 {
 	cmd_t	*cmd_1;
 
 	if (!str || !*str)
 		return (0);
+	cmd_init(&cmd_1);
 	var->count++;
-	cmd_1 = (cmd_t *)malloc(sizeof(cmd_t));
-	cmd_1->next = NULL;
-	cmd_1->hd = 0;
-	cmd_1->fd[0] = 0;
-	cmd_1->fd[1] = 1;
-	cmd_1->fd[2] = 2;
 	if (cmd && *cmd)
 		my_pipe(*cmd, cmd_1);
 	if (!parse_str(cmd_1, str, "input", '<')
 		|| !parse_str(cmd_1, str, "output", '>'))
 	{
-		g_status = 123;
+		g_status = 258;
 		free(cmd_1);
 		return (0);
 	}
@@ -656,6 +650,80 @@ cmd_t	*del_cmd(cmd_t *cmd, var_t *var)
 	return (cmd_1);
 }
 
+int	dev_cmd(char **s, char **ptr, cmd_t **cmd, var_t *var, quote_t *quote)
+{
+	char	*dst;
+
+	if (*ptr == *s || *(++*ptr) == '|')
+	{
+		g_status = 258;
+		return (0);
+	}
+	dst = (char *)malloc(*ptr - *s);
+	if (!dst)
+	{
+		perror("msh");
+		g_status = 1;
+		return (0);
+	}
+	ft_strlcpy(dst, *s, *ptr - *s);
+	if (!add_cmd(dst, cmd, var))
+	{
+		free(dst);
+		return (0);
+	}
+	free(dst);
+	*s = *ptr;
+	*ptr = ft_strchr(*s, '|');
+	return (1);
+}
+
+int	bef_quo(cmd_t **cmd, char **s,  quote_t **quote, char **ptr, var_t *var)
+{
+	quote_t	*quote_1;
+
+	while (*ptr && *ptr < (*quote)->start)
+		if (!dev_cmd(s, ptr, cmd, var, *quote))
+		{ 
+			free(*quote);
+			return (0);
+		}
+	if (*ptr)
+		*ptr = ft_strchr((*quote)->end, '|');
+	quote_1 = *quote;
+	*quote = get_quote((*quote)->end + 1);
+	free(quote_1);
+	return (1);
+}
+
+int	check_syntax_error(char *s, cmd_t **cmd, var_t *var)
+{
+	char	*ptr;
+	quote_t	*quote;
+
+	*cmd = NULL;
+	var->count = 0;
+	ptr = ft_strchr(s, '|');
+	quote = get_quote(s);
+	if (quote == 1)
+		return (0);
+	while (quote > 3 && ptr)
+		if (!bef_quo(cmd, &s, &quote, &ptr, var))
+			return (0);
+	if (quote == 3)
+	{
+		ft_putstr_fd("msh: syntax error near unexpected token `quote'\n", 2);
+		g_status = 258;
+		return (0);
+	}
+	if (quote > 3)
+		free(quote);
+	while (ptr)
+		if (!dev_cmd(&s, &ptr, cmd, var, quote))
+			return (0);
+	return (add_cmd(s, cmd, var));
+}
+
 int	buildin(cmd_t *cmd, char **envp)
 {
 		if (!cmd->arg[0])
@@ -679,80 +747,14 @@ int	buildin(cmd_t *cmd, char **envp)
 		return (1);
 }
 
-int	dev_cmd(char **s, char **ptr, cmd_t **cmd, var_t *var, quote_t *quote)
+void	dup2pipe_and_execute(cmd_t *cmd, var_t *var, char **envp)
 {
-	char	*dst;
-
-	if (*ptr == *s || *(++*ptr) == '|')
-		return (0);
-	dst = (char *)malloc(*ptr - *s);
-	if (!dst)
-		return (0);
-	ft_strlcpy(dst, *s, *ptr - *s);
-	if (!add_cmd(dst, cmd, var))
+	if (dup2(cmd->fd[0], 0) == -1 || dup2(cmd->fd[1], 1) == -1
+		|| dup2(cmd->fd[2], 2) == -1)
 	{
-		free(dst);
-		return (0);
-	}
-	free(dst);
-	*s = *ptr;
-	*ptr = ft_strchr(*s, '|');
-	return (1);
-}
-
-int	check_serror(char *s, cmd_t **cmd, var_t *var)
-{
-	char	*ptr;
-	quote_t	*quote;
-	quote_t	*quote_1;
-	quote_t	*quote_temp;
-
-	*cmd = NULL;
-	var->count = 0;
-	ptr = ft_strchr(s, '|');
-	quote = get_quote(s);
-	if (quote == 1)
-		return (0);
-	while (quote > 3 && ptr)
-	{
-		while (ptr && ptr < quote->start)
-			if (!dev_cmd(&s, &ptr, cmd, var, quote))
-			{ 
-				free(quote);
-				return (0);
-			}
-		if (ptr)
-			ptr = ft_strchr(quote->end, '|');
-		quote_1 = quote;
-		quote = get_quote(quote->end + 1);
-		free(quote_1);
-	}
-	if (quote == 3)
-	{
-		ft_putstr_fd("msh: syntax error near unexpected token `quote'\n", 2);
-		g_status = 258;
-		return (0);
-	}
-	if (quote > 3)
-		free(quote);
-	while(ptr)
-	{
-		if (!dev_cmd(&s, &ptr, cmd, var, quote))
-			return (0);
-	}
-	if (!add_cmd(s, cmd, var))
-		return (0);
-	return (1);
-}
-
-void	run(cmd_t *cmd, var_t *var, char **envp)
-{
-	if (dup2(cmd->fd[2], 2) == -1)
 		perror("msh");
-	if (dup2(cmd->fd[1], 1) == -1)
-		perror("msh");
-	if (dup2(cmd->fd[0], 0) == -1)
-		perror("msh");
+		g_status = 1;
+	}
 	if (cmd->fd[0])
 		close(cmd->fd[0]);
 	if (cmd->fd[1] > 1)
@@ -768,58 +770,57 @@ void	run(cmd_t *cmd, var_t *var, char **envp)
 	}
 }
 
-void	funk(cmd_t *cmd, var_t *var, char **envp)
+void	dup_standart_fd(var_t *var)
 {
-	cmd_t	*cmd_1;
-	var_t	var_1;
-	char	*temp;
-	int		pid;
-
-	cmd_1 = NULL;
 	var->fd_input = dup(0);
-	if (var->fd_input == -1)
-		perror("msh");
 	var->fd_output = dup(1);
-	if (var->fd_output == -1)
-		perror("msh");
 	var->fd_err = dup(2);
-	if (var->fd_err == -1)
+	if (var->fd_input == -1 || var->fd_output == -1 || var->fd_err == -1)
 		perror("msh");
-	add_cmd("export _=/usr/bin/env", &cmd_1, &var_1);
-	export(cmd_1, envp);
-	del_cmd(cmd_1, var);
+}
+
+void	reverse_dup_standart_fd(var_t *var)
+{
+	dup2(var->fd_input, 0);
+	dup2(var->fd_output, 1);
+	dup2(var->fd_err, 2);
+	close(var->fd_input);
+	close(var->fd_output);
+	close(var->fd_err);
+}
+
+void	erease_and_return(cmd_t *cmd, var_t *var)
+{
+	perror("msh: fork");
+	g_status = 1;
+	while (cmd)
+		cmd = del_cmd(cmd, var);
+	reverse_dup_standart_fd(var);
+}
+
+void	run(cmd_t *cmd, var_t *var, char **envp)
+{
+	dup_standart_fd(var);
 	signal(SIGQUIT, QUIT_handler_fork);
 	signal(SIGINT, INT_handler_fork);
 	while (cmd)
 	{
 		if (var->count > 1)
 		{
-			pid = fork();
-			if (pid == -1)
-				perror("msh");
-			else if (pid == 0)
+			var->pid = fork();
+			if (var->pid == -1)
+				return (erease_and_return(cmd, var));
+			else if (var->pid == 0)
 			{
-			signal(SIGQUIT, QUIT_handler_exec);
-			signal(SIGINT, INT_handler_exec);
-				run(cmd, var, envp);
+				signal(SIGQUIT, QUIT_handler_exec);
+				signal(SIGINT, INT_handler_exec);
+				dup2pipe_and_execute(cmd, var, envp);
 				exit(0);
 			}
 		}
 		else
-		{
-			temp = ft_strjoin("export _=", cmd->arg[get_lines(cmd->arg) - 1]);
-			add_cmd(temp, &cmd_1, &var_1);
-			export(cmd_1, envp);
-			del_cmd(cmd_1, var);
-			free(temp);
-			run(cmd, var, envp);
-		}
-		dup2(var->fd_input, 0);
-		dup2(var->fd_output, 1);
-		dup2(var->fd_err, 2);
-		close(var->fd_input);
-		close(var->fd_output);
-		close(var->fd_err);
+			dup2pipe_and_execute(cmd, var, envp);
+		reverse_dup_standart_fd(var);
 		cmd = del_cmd(cmd, var);
 	}
 }
@@ -856,14 +857,33 @@ void	my_alloc(char **en)
 	}
 }
 
-int	emptyline(char *ch)
+int	emptyline(char *ch, var_t *var)
 {
+	if (!ch)
+	{
+		free(var);
+		ft_putstr_fd("exit\n", 1);
+		exit (g_status);
+	}
 	if (!*ch)
+	{
 		return (1);
+	}
 	while (*ch)
 		if (*(ch++) != ' ')
 			return (0);
 	return (1);
+}
+
+void	parse_and_run(cmd_t *cmd, char *ch, var_t *var, char **envp)
+{
+	add_history(ch);
+	if (check_syntax_error(ch, &cmd, var))
+	{
+		run(cmd, var, envp);
+		while (var->count--)
+			wait(NULL);
+	}
 }
 
 int main(int ac, char **av, char **envp)
@@ -885,30 +905,10 @@ int main(int ac, char **av, char **envp)
 		var = (var_t *)malloc(sizeof(var_t));
 		var->envp = envp;
 		ch = readline("\e[0;32mminishell \e[0;0m");
-		if (!ch)
-		{
-			free(var);
-			ft_putstr_fd("exit\n", 1);
-			exit (g_status);
-		}
-		if (emptyline(ch))
-		{
-			free(ch);
-			free(var);
-			continue ;
-		}
-		add_history(ch);
-		if (!check_serror(ch, &cmd, var))
-		{
-			free(ch);
-			free(var);
-			continue ;
-		}
-		funk(cmd, var, envp);
-		while (var->count--)
-			wait(NULL);
+		if (!emptyline(ch, var))
+			parse_and_run(cmd, ch, var, envp);
 		free(ch);
-	free(var);
+		free(var);
 	}
 	return (0);
 }

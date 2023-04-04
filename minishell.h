@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/03/31 13:01:19 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/04 17:38:47 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,8 +52,8 @@ typedef struct	var
 {
 	char		**envp;
 	char 		**path_split;
-	char		*cmd_path;
 	char 		*cmd_path_1;
+	char		*cmd_path;
 	char 		*ptr;
 	char 		*file;
 	char 		*file_1;
@@ -63,6 +63,7 @@ typedef struct	var
 	int			iter_i;
 	int			iter_j;
 	int			count;
+	int			pid;
 	int			fd;
 	int			fd_input;
 	int			fd_output;
