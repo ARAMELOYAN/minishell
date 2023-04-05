@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 16:16:45 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 16:38:47 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/05 23:00:22 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,4 +51,11 @@ int	exec(cmd_t *cmd, char **envp)
 	if (g_status == 127)
 		return (0);
 	return (1);
+}
+
+void	pwd(void)
+{
+	var_t	var;
+
+	printf("%s\n", getcwd(var.buffer, 200));
 }

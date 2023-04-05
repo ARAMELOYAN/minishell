@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/23 14:52:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 20:03:24 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/05 23:02:33 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,7 @@ int			find_and_run(cmd_t *cmd, var_t *var, char **envp);
 void		pwd(void);
 
 void		parse_and_run(cmd_t *cmd, char *ch, var_t *var, char **envp);
-int			mptyline(char *ch, var_t *var);
+int			emptyline(char *ch, var_t *var);
 void		my_alloc(char **en);
 void		change_shlvl(char **envp);
 void		run(cmd_t *cmd, var_t *var, char **envp);
