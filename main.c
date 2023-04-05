@@ -6,13 +6,13 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 23:08:00 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 23:09:43 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:09:23 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	emptyline(char *ch, var_t *var)
+int	emptyline(char *ch, t_var *var)
 {
 	if (!ch)
 	{
@@ -65,8 +65,8 @@ void	my_alloc(char **en)
 int	main(int ac, char **av, char **envp)
 {
 	char	*ch;
-	cmd_t	*cmd;
-	var_t	*var;
+	t_cmd	*cmd;
+	t_var	*var;
 
 	(void)ac;
 	(void)av;
@@ -80,7 +80,7 @@ int	main(int ac, char **av, char **envp)
 	{
 		signal(SIGQUIT, SIG_IGN);
 		signal(SIGINT, handler);
-		var = (var_t *)malloc(sizeof(var_t));
+		var = (t_var *)malloc(sizeof(t_var));
 		var->envp = envp;
 		ch = readline("\e[0;32mminishell \e[0;0m");
 		if (!emptyline(ch, var))

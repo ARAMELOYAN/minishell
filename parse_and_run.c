@@ -6,13 +6,13 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 23:10:23 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 23:22:18 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:09:58 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	dev_cmd(char **s, cmd_t **cmd, var_t *var)
+int	dev_cmd(char **s, t_cmd **cmd, t_var *var)
 {
 	char	*dst;
 
@@ -40,9 +40,9 @@ int	dev_cmd(char **s, cmd_t **cmd, var_t *var)
 	return (1);
 }
 
-int	bef_quo(cmd_t **cmd, char **s, quote_t **quote, var_t *var)
+int	bef_quo(t_cmd **cmd, char **s, t_quote **quote, t_var *var)
 {
-	quote_t	*quote_1;
+	t_quote	*quote_1;
 
 	while (var->ptr && var->ptr < (*quote)->start)
 	{
@@ -60,15 +60,15 @@ int	bef_quo(cmd_t **cmd, char **s, quote_t **quote, var_t *var)
 	return (1);
 }
 
-quote_t	*get_quote(char *ptr)
+t_quote	*get_quote(char *ptr)
 {
-	quote_t	*quote;
+	t_quote	*quote;
 
 	if (!ptr)
-		return ((quote_t *)2);
-	quote = (quote_t *)malloc(sizeof(quote_t));
+		return ((t_quote *)2);
+	quote = (t_quote *)malloc(sizeof(t_quote));
 	if (!quote)
-		return ((quote_t *)1);
+		return ((t_quote *)1);
 	quote->start = ft_strchr(ptr, '\'');
 	quote->end = ft_strchr(ptr, '"');
 	if ((quote->start || quote->end))
@@ -83,32 +83,32 @@ quote_t	*get_quote(char *ptr)
 		if (quote->end)
 			return (quote);
 		free(quote);
-		return ((quote_t *)3);
+		return ((t_quote *)3);
 	}
 	free(quote);
-	return ((quote_t *)0);
+	return ((t_quote *)0);
 }
 
-int	check_syntax_error(char *s, cmd_t **cmd, var_t *var)
+int	check_syntax_error(char *s, t_cmd **cmd, t_var *var)
 {
-	quote_t	*quote;
+	t_quote	*quote;
 
 	*cmd = NULL;
 	var->count = 0;
 	var->ptr = ft_strchr(s, '|');
 	quote = get_quote(s);
-	if (quote == (quote_t *)1)
+	if (quote == (t_quote *)1)
 		return (0);
-	while (quote > (quote_t *)3 && var->ptr)
+	while (quote > (t_quote *)3 && var->ptr)
 		if (!bef_quo(cmd, &s, &quote, var))
 			return (0);
-	if (quote == (quote_t *)3)
+	if (quote == (t_quote *)3)
 	{
 		ft_putstr_fd("msh: syntax error near unexpected token `quote'\n", 2);
 		g_status = 258;
 		return (0);
 	}
-	if (quote > (quote_t *)3)
+	if (quote > (t_quote *)3)
 		free(quote);
 	while (var->ptr)
 		if (!dev_cmd(&s, cmd, var))
@@ -116,7 +116,7 @@ int	check_syntax_error(char *s, cmd_t **cmd, var_t *var)
 	return (add_cmd(s, cmd, var));
 }
 
-void	parse_and_run(cmd_t *cmd, char *ch, var_t *var, char **envp)
+void	parse_and_run(t_cmd *cmd, char *ch, t_var *var, char **envp)
 {
 	add_history(ch);
 	if (check_syntax_error(ch, &cmd, var))

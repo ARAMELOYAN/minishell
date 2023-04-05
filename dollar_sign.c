@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 23:23:19 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 23:27:40 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:06:03 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,19 +51,19 @@ void	replace(char **arg, char **ptr, char **envp)
 		*ptr = ft_strchr(*ptr + 1, '$');
 }
 
-void	replace_dollar(char **arg, quote_t **quote, char **ptr, char **envp)
+void	replace_dollar(char **arg, t_quote **quote, char **ptr, char **envp)
 {
-	quote_t	*quote_1;
+	t_quote	*quote_1;
 
 	if (ft_isalpha(*(*ptr + 1)) || *(*ptr + 1) == '?' || *(*ptr + 1) == '_')
 	{
 		replace(arg, ptr, envp);
-		if (quote && *quote > (quote_t *)3)
+		if (quote && *quote > (t_quote *)3)
 		{
 			free(*quote);
 			*quote = get_quote(*arg);
 		}
-		while (quote && *quote > (quote_t *)3 && (*quote)->end < *ptr)
+		while (quote && *quote > (t_quote *)3 && (*quote)->end < *ptr)
 		{
 			quote_1 = *quote;
 			*quote = get_quote((*quote)->end + 1);
@@ -74,23 +74,23 @@ void	replace_dollar(char **arg, quote_t **quote, char **ptr, char **envp)
 		*ptr = ft_strchr(*ptr + 1, '$');
 }
 
-void	dollar_into_quote(char **ptr, char **arg, char **envp, quote_t **quote)
+void	dollar_into_quote(char **ptr, char **arg, char **envp, t_quote **quote)
 {
-	quote_t	*quote_1;
+	t_quote	*quote_1;
 
-	while (*ptr && (*quote) > (quote_t *)3 && *ptr < (*quote)->start)
+	while (*ptr && (*quote) > (t_quote *)3 && *ptr < (*quote)->start)
 		replace_dollar(arg, quote, ptr, envp);
-	while (*ptr && (*quote) > (quote_t *)3 && *ptr > (*quote)->start
+	while (*ptr && (*quote) > (t_quote *)3 && *ptr > (*quote)->start
 		&& *ptr < (*quote)->end && *(*quote)->start == '"')
 		replace_dollar(arg, quote, ptr, envp);
-	if ((*quote) > (quote_t *)3 && *(*quote)->end == '\'')
+	if ((*quote) > (t_quote *)3 && *(*quote)->end == '\'')
 	{
 		*ptr = ft_strchr((*quote)->end, '$');
 		quote_1 = (*quote);
 		(*quote) = get_quote((*quote)->end + 1);
 		free(quote_1);
 	}
-	while (*ptr && (*quote) > (quote_t *)3 && *ptr > (*quote)->end)
+	while (*ptr && (*quote) > (t_quote *)3 && *ptr > (*quote)->end)
 	{
 		quote_1 = (*quote);
 		(*quote) = get_quote((*quote)->end + 1);
@@ -100,18 +100,18 @@ void	dollar_into_quote(char **ptr, char **arg, char **envp, quote_t **quote)
 
 void	find_dollar(char **arg, char **envp)
 {
-	quote_t	*quote;
+	t_quote	*quote;
 	char	*ptr;
 
 	while (arg && *arg)
 	{
 		ptr = ft_strchr(*arg, '$');
 		quote = get_quote(*arg);
-		while (ptr && quote > (quote_t *)3)
+		while (ptr && quote > (t_quote *)3)
 			dollar_into_quote(&ptr, arg, envp, &quote);
 		while (ptr)
 			replace_dollar(arg, NULL, &ptr, envp);
-		if (quote > (quote_t *)3)
+		if (quote > (t_quote *)3)
 			free(quote);
 		arg++;
 	}

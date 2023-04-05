@@ -6,15 +6,15 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 23:16:21 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 23:21:35 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:09:40 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-cmd_t	*del_cmd(cmd_t *cmd, var_t *var)
+t_cmd	*del_cmd(t_cmd *cmd, t_var *var)
 {
-	cmd_t	*cmd_1;
+	t_cmd	*cmd_1;
 
 	if (cmd->fd[0])
 		close(cmd->fd[0]);
@@ -33,7 +33,7 @@ cmd_t	*del_cmd(cmd_t *cmd, var_t *var)
 	return (cmd_1);
 }
 
-void	reset_empty_line(cmd_t *cmd)
+void	reset_empty_line(t_cmd *cmd)
 {
 	char	**temp;
 
@@ -48,7 +48,7 @@ void	reset_empty_line(cmd_t *cmd)
 	}
 }
 
-void	my_pipe(cmd_t *cmd, cmd_t *cmd_1)
+void	my_pipe(t_cmd *cmd, t_cmd *cmd_1)
 {
 	int		fd[2];
 
@@ -68,10 +68,9 @@ void	my_pipe(cmd_t *cmd, cmd_t *cmd_1)
 		close(fd[0]);
 }
 
-
-void	cmd_init(cmd_t **cmd)
+void	cmd_init(t_cmd **cmd)
 {
-	*cmd = (cmd_t *)malloc(sizeof(cmd_t));
+	*cmd = (t_cmd *)malloc(sizeof(t_cmd));
 	(*cmd)->next = NULL;
 	(*cmd)->hd = 0;
 	(*cmd)->fd[0] = 0;
@@ -79,9 +78,9 @@ void	cmd_init(cmd_t **cmd)
 	(*cmd)->fd[2] = 2;
 }
 
-int	add_cmd(char *str, cmd_t **cmd, var_t *var)
+int	add_cmd(char *str, t_cmd **cmd, t_var *var)
 {
-	cmd_t	*cmd_1;
+	t_cmd	*cmd_1;
 
 	if (!str || !*str)
 		return (0);

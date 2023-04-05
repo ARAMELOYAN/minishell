@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 22:54:33 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 22:55:45 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:07:45 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,7 +101,7 @@ int	valid(char *arg, char **envp)
 	return (1);
 }
 
-void	export(cmd_t *cmd, char **envp)
+void	export(t_cmd *cmd, char **envp)
 {
 	char	**temp;
 

@@ -6,13 +6,13 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 23:37:03 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 23:38:43 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:10:46 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	init_val(quote_t **quote, int *i, char **p_e, char *s)
+int	init_val(t_quote **quote, int *i, char **p_e, char *s)
 {
 	*i = 0;
 	*p_e = s;
@@ -29,9 +29,9 @@ int	search_word(char **p_s, char *s, char c, int i)
 	return (i);
 }
 
-int	search_end(quote_t **qu, char **p_e, char *s)
+int	search_end(t_quote **qu, char **p_e, char *s)
 {
-	quote_t	*quote_1;
+	t_quote	*quote_1;
 
 	*p_e = my_min(ft_strchr((*qu)->end, ' '), ft_strchr((*qu)->end, '\0'));
 	quote_1 = *qu;
@@ -42,7 +42,7 @@ int	search_end(quote_t **qu, char **p_e, char *s)
 
 char	**splitting(char **mat, char *s, char c)
 {
-	quote_t	*quote;
+	t_quote	*quote;
 	char	*p_start;
 	char	*p_end;
 	int		i;
@@ -54,7 +54,7 @@ char	**splitting(char **mat, char *s, char c)
 	{
 		i = search_word(&p_start, s, c, i);
 		p_end = s + i;
-		while (quote > (quote_t *)3 && p_end > quote->start)
+		while (quote > (t_quote *)3 && p_end > quote->start)
 			i = search_end(&quote, &p_end, s);
 		if (p_start < p_end)
 			mat[j] = ft_substr(s, p_start - s, p_end - p_start);

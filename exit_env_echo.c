@@ -6,15 +6,15 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 22:50:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 22:52:27 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:07:29 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	echom(cmd_t *cmd)
+void	echom(t_cmd *cmd)
 {
-	var_t	var;
+	t_var	var;
 	int		nline;
 
 	var.iter_i = 0;
@@ -62,7 +62,6 @@ void	print_err_arg(const char *s)
 	exit(255);
 }	
 
-
 long int	msh_atoi(const char *s)
 {
 	unsigned long	val;
@@ -86,9 +85,9 @@ long int	msh_atoi(const char *s)
 	return (val * k);
 }
 
-void	exitm(cmd_t *cmd)
+void	exitm(t_cmd *cmd)
 {
-	var_t	var;
+	t_var	var;
 	long	val;
 
 	printf("exit\n");

@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 22:57:25 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 22:57:50 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:05:30 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ int	valid_identifier(char *arg)
 	return (1);
 }
 
-void	unset(cmd_t *cmd, char **e)
+void	unset(t_cmd *cmd, char **e)
 {
 	char	**temp;
 
@@ -80,10 +80,10 @@ void	print_export_formatted_env(char **env)
 
 void	manevr(char **envp)
 {
-	cmd_t	*cmd_1;
-	var_t	var;
+	t_cmd	*cmd_1;
+	t_var	var;
 
-	cmd_1 = (cmd_t *)malloc(sizeof(cmd_t));
+	cmd_1 = (t_cmd *)malloc(sizeof(t_cmd));
 	cmd_1->arg = (char **)malloc(sizeof(char *) * 4);
 	cmd_1->arg[0] = ft_strdup("export");
 	cmd_1->arg[1] = ft_strjoin("PWD=", getcwd(var.buffer, 200));
@@ -95,7 +95,7 @@ void	manevr(char **envp)
 	del_cmd(cmd_1, &var);
 }
 
-int	cd(cmd_t *cmd, char **envp)
+int	cd(t_cmd *cmd, char **envp)
 {
 	if (!*(++cmd->arg))
 	{

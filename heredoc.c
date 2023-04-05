@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 23:39:17 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 23:43:14 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:08:43 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ void	clean(char **mat, int j)
 	return ;
 }
 
-int	create_buffer(var_t *var)
+int	create_buffer(t_var *var)
 {
 	char	*ch[2];
 
@@ -73,7 +73,7 @@ int	create_buffer(var_t *var)
 	return (1);
 }
 
-int	heredoc(cmd_t *cmd, var_t *var)
+int	heredoc(t_cmd *cmd, t_var *var)
 {
 	var->fd = open(".heredoc", O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	signal(SIGINT, hd_handler);
@@ -87,7 +87,7 @@ int	heredoc(cmd_t *cmd, var_t *var)
 	return (0);
 }
 
-void	del_heredoc(cmd_t *cmd)
+void	del_heredoc(t_cmd *cmd)
 {
 	char	*arg[3];
 

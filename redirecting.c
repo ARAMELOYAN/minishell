@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 23:30:25 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 23:32:40 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:10:14 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,13 @@
 
 void	clear_quote(char **arg)
 {
-	quote_t	*quote;
-	quote_t	*quote_1;
+	t_quote	*quote;
+	t_quote	*quote_1;
 
 	while (arg && *arg)
 	{
 		quote = get_quote(*arg);
-		while (quote > (quote_t *)3)
+		while (quote > (t_quote *)3)
 		{
 			ft_memmove(quote->start, quote->start + 1, ft_strlen(quote->start));
 			ft_memmove(quote->end - 1, quote->end, ft_strlen(quote->end) + 1);
@@ -32,9 +32,9 @@ void	clear_quote(char **arg)
 	}
 }
 
-int	my_open(cmd_t *cmd, char *str, char *motiv, int red)
+int	my_open(t_cmd *cmd, char *str, char *motiv, int red)
 {
-	var_t	var;
+	t_var	var;
 	char	*file[2];
 
 	var.envp = NULL;
@@ -85,18 +85,18 @@ int	syntax_error(char **ptr, char ch)
 	return (0);
 }
 
-int	set_redir_error(quote_t **quote, char **ptr, char ch)
+int	set_redir_error(t_quote **quote, char **ptr, char ch)
 {
-	quote_t	*quote_1;
+	t_quote	*quote_1;
 
-	while (*quote > (quote_t *)3 && *ptr > (*quote)->start)
+	while (*quote > (t_quote *)3 && *ptr > (*quote)->start)
 	{
 		*ptr = ft_strchr((*quote)->end, ch);
 		quote_1 = *quote;
 		*quote = get_quote((*quote)->end + 1);
 		free(quote_1);
 	}
-	if (*quote > (quote_t *)3)
+	if (*quote > (t_quote *)3)
 		free(*quote);
 	if (!*ptr)
 		return (-1);
@@ -110,10 +110,10 @@ int	set_redir_error(quote_t **quote, char **ptr, char ch)
 	return (0);
 }
 
-int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
+int	parse_str(t_cmd *cmd, char *str, char *motiv, char ch)
 {
-	var_t	var;
-	quote_t	*quote;
+	t_var	var;
+	t_quote	*quote;
 
 	var.ptr = ft_strchr(str, ch);
 	quote = get_quote(str);
@@ -134,7 +134,7 @@ int	parse_str(cmd_t *cmd, char *str, char *motiv, char ch)
 		var.ptr = ft_strchr(str, ch);
 		quote = get_quote(str);
 	}
-	if (quote > (quote_t *)3)
+	if (quote > (t_quote *)3)
 		free(quote);
 	return (1);
 }

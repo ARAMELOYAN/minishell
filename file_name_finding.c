@@ -6,13 +6,13 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 23:34:24 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 23:36:31 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:08:02 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	redir_input(cmd_t *cmd, var_t *var, int i)
+int	redir_input(t_cmd *cmd, t_var *var, int i)
 {
 	if (i == 0)
 		var->fd = open(var->file, O_RDONLY);
@@ -27,7 +27,7 @@ int	redir_input(cmd_t *cmd, var_t *var, int i)
 	return (0);
 }
 
-int	redir_output(cmd_t *cmd, var_t *var, int i)
+int	redir_output(t_cmd *cmd, t_var *var, int i)
 {
 	if (i > 7)
 		var->fd = open(var->file, O_RDWR | O_CREAT | O_APPEND, 0644);
@@ -69,15 +69,15 @@ char	*next_special(char *str)
 	return (str);
 }
 
-void	find_key(char *str, var_t *var)
+void	find_key(char *str, t_var *var)
 {
-	quote_t	*quote;
-	quote_t	*quote_1;
+	t_quote	*quote;
+	t_quote	*quote_1;
 
 	var->ptr = next_special(str);
 	quote = get_quote(str);
 	var->open_dollar = 1;
-	while (quote > (quote_t *)3 && var->ptr >= quote->start)
+	while (quote > (t_quote *)3 && var->ptr >= quote->start)
 	{
 		var->open_dollar = 0;
 		var->ptr = next_special(quote->end);
@@ -85,6 +85,6 @@ void	find_key(char *str, var_t *var)
 		quote = get_quote(quote->end + 1);
 		free(quote_1);
 	}
-	if (quote > (quote_t *)3)
+	if (quote > (t_quote *)3)
 		free(quote);
 }

@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 23:44:12 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 23:46:16 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:06:28 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ void	quit_handler_exec(int sig)
 	(void)sig;
 }
 
-void	dup2pipe_and_execute(cmd_t *cmd, char **envp)
+void	dup2pipe_and_execute(t_cmd *cmd, char **envp)
 {
 	if (dup2(cmd->fd[0], 0) == -1 || dup2(cmd->fd[1], 1) == -1
 		|| dup2(cmd->fd[2], 2) == -1)
@@ -45,7 +45,7 @@ void	dup2pipe_and_execute(cmd_t *cmd, char **envp)
 	}
 }
 
-void	dup_standart_fd(var_t *var)
+void	dup_standart_fd(t_var *var)
 {
 	var->fd_input = dup(0);
 	var->fd_output = dup(1);
@@ -54,7 +54,7 @@ void	dup_standart_fd(var_t *var)
 		perror("msh");
 }
 
-void	reverse_dup_standart_fd(var_t *var)
+void	reverse_dup_standart_fd(t_var *var)
 {
 	dup2(var->fd_input, 0);
 	dup2(var->fd_output, 1);

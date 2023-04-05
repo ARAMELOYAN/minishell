@@ -6,13 +6,13 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 16:16:45 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 23:00:22 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:07:10 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	find_and_run(cmd_t *cmd, var_t *var, char **envp)
+int	find_and_run(t_cmd *cmd, t_var *var, char **envp)
 {
 	var->cmd_path = ft_strjoin(var->path_split[var->iter_i], "/");
 	var->cmd_path_1 = ft_strjoin(var->cmd_path, cmd->arg[0]);
@@ -30,9 +30,9 @@ int	find_and_run(cmd_t *cmd, var_t *var, char **envp)
 	return (0);
 }
 
-int	exec(cmd_t *cmd, char **envp)
+int	exec(t_cmd *cmd, char **envp)
 {
-	var_t	var;
+	t_var	var;
 
 	if (fork() == 0)
 	{
@@ -55,7 +55,7 @@ int	exec(cmd_t *cmd, char **envp)
 
 void	pwd(void)
 {
-	var_t	var;
+	t_var	var;
 
 	printf("%s\n", getcwd(var.buffer, 200));
 }

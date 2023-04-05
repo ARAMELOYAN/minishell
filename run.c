@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/05 23:48:04 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 00:10:28 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ char	*my_getenv(char **env, char *key)
 	return (0);
 }
 
-int	buildin(cmd_t *cmd, char **envp)
+int	buildin(t_cmd *cmd, char **envp)
 {
 	if (!cmd->arg[0])
 		return (0);
@@ -55,7 +55,7 @@ int	buildin(cmd_t *cmd, char **envp)
 	return (1);
 }
 
-void	erease_and_return(cmd_t *cmd, var_t *var)
+void	erease_and_return(t_cmd *cmd, t_var *var)
 {
 	perror("msh: fork");
 	g_status = 1;
@@ -64,7 +64,7 @@ void	erease_and_return(cmd_t *cmd, var_t *var)
 	reverse_dup_standart_fd(var);
 }
 
-void	run(cmd_t *cmd, var_t *var, char **envp)
+void	run(t_cmd *cmd, t_var *var, char **envp)
 {
 	dup_standart_fd(var);
 	signal(SIGQUIT, quit_handler_fork);
