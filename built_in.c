@@ -6,13 +6,13 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/10 15:58:47 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/04 12:51:18 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/05 19:45:35 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	valid_identifier(char *arg, char **envp)
+int	valid_identifier(char *arg)
 {
 	int		i;
 
@@ -24,7 +24,7 @@ int	valid_identifier(char *arg, char **envp)
 	while (arg && arg[++i] && arg[i] != '=')
 		if ((i == 0 && (!ft_isalpha(arg[i]) && arg[i] != '_'))
 			|| ((!ft_isalnum(arg[i]) && arg[i] != '_' && arg[i] != '+')
-			|| (arg[i] == '+' && arg[i + 1] != '=')))
+				|| (arg[i] == '+' && arg[i + 1] != '=')))
 			return (0);
 	return (1);
 }
@@ -36,20 +36,19 @@ void	unset(cmd_t *cmd, char **e)
 	temp = cmd->arg;
 	while (*(++temp))
 	{
-	if (!valid_identifier(*temp, e) || ft_strchr(*temp, '='))
-	{
-		errno = 1;
-		ft_putstr_fd("msh: unset: `", 2);
-		ft_putstr_fd(*temp, 2);
-		ft_putstr_fd("': not a valid identifier\n", 2);
-		continue ;
-	}
+		if (!valid_identifier(*temp) || ft_strchr(*temp, '='))
+		{
+			errno = 1;
+			ft_putstr_fd("msh: unset: `", 2);
+			ft_putstr_fd(*temp, 2);
+			ft_putstr_fd("': not a valid identifier\n", 2);
+			continue ;
+		}
 		while (*e)
 		{
 			if (!ft_strncmp(*e, *temp, ft_strchr(*e, '=') - *e))
 			{
-				free(*e);
-				e--;
+				free(*(e--));
 				while (*(++e))
 					*e = e[1];
 				break ;
@@ -79,66 +78,92 @@ void	print_export_formatted_env(char **env)
 	}
 }
 
+int	not_coresp(char ***envp, char *ptr, char *arg)
+{
+	if (ptr - arg != ft_strchr(**envp, '=') - **envp)
+	{
+		(*envp)++;
+		return (1);
+	}
+	return (0);
+}
+
+int	add_envi_mej(char ***envp, char *temp, char *ptr, char *arg)
+{
+	if (*ptr == '+')
+	{
+		if (!ft_strchr(**envp, '='))
+		{
+			temp = **envp;
+			**envp = ft_strjoin(**envp, "=");
+			free(temp);
+		}
+		else if (not_coresp(envp, ptr, arg))
+			return (0);
+		temp = **envp;
+		**envp = ft_strjoin(**envp, ptr + 2);
+		free(temp);
+	}
+	else
+	{
+		if (not_coresp(envp, ptr, arg))
+			return (0);
+		temp = **envp;
+		**envp = ft_strdup(arg);
+		free(temp);
+	}
+	return (1);
+}
+
+int	search_in_env(char ***envp, char **ptr, char *arg)
+{
+	char	*temp;
+
+	temp = NULL;
+	*ptr = ft_strchr(arg, '+');
+	if (!*ptr)
+		*ptr = ft_strchr(arg, '=');
+	if (*ptr)
+	{
+		if (!ft_strncmp(**envp, arg, *ptr - arg))
+		{
+			if (!add_envi_mej(envp, temp, *ptr, arg))
+				return (0);
+			return (2);
+		}
+	}
+	else if (!ft_strncmp(**envp, arg, ft_strlen(arg)))
+		return (1);
+	++(*envp);
+	return (3);
+}
+
 int	valid(char *arg, char **envp)
 {
 	char	*ptr;
-	char	**temp;
+	char	*temp;
+	int		d;
 
-	if (!valid_identifier(arg, envp))
+	if (!valid_identifier(arg))
 		return (0);
 	while (*envp)
 	{
-		ptr = ft_strchr(arg, '+');
-		if (!ptr)
-			ptr = ft_strchr(arg, '=');
-		if (ptr)
-		{
-			if (!ft_strncmp(*envp, arg, ptr - arg))
-			{
-				if (*ptr == '+')
-				{
-					if (!ft_strchr(*envp, '='))
-					{
-						temp = *envp;
-						*envp = ft_strjoin(*envp, "=");
-						free(temp);
-					}
-					else if (ptr - arg != ft_strchr(*envp, '=') - *envp)
-					{
-						envp++;
-						continue;
-					}
-					temp = *envp;
-					*envp = ft_strjoin(*envp, ptr + 2);
-					free(temp);
-				}
-				else 
-				{
-					if (ptr - arg != ft_strchr(*envp, '=') - *envp)
-					{
-						envp++;
-						continue;
-					}
-					temp = *envp;
-					*envp = ft_strdup(arg);
-					free(temp);
-				}
-				break ;
-			}
-		}
-		else if (!ft_strncmp(*envp, arg, ft_strlen(arg)))
+		d = search_in_env(&envp, &ptr, arg);
+		if (!d)
+			continue ;
+		if (d == 1)
 			return (1);
-		++envp;
+		if (d == 2)
+			break ;
 	}
-	if (!*envp)
-	{
-		if (ptr && *ptr == '+')
-			ft_memmove(ptr, ptr + 1, ft_strlen(ptr));
-		temp = *envp;
-		*envp = ft_strdup(arg);
-		free(temp);
-		*(++envp) = NULL;
-	}
+	if (*envp)
+		return (1);
+	if (ptr && *ptr == '+')
+		ft_memmove(ptr, ptr + 1, ft_strlen(ptr));
+	temp = *envp;
+	*envp = ft_strdup(arg);
+	free(temp);
+	*(++envp) = NULL;
 	return (1);
 }
 
@@ -164,7 +189,7 @@ void	export(cmd_t *cmd, char **envp)
 	}
 }
 
-void	pwd()
+void	pwd(void)
 {
 	var_t	var;
 
@@ -188,7 +213,7 @@ void	manevr(char **envp)
 	del_cmd(cmd_1, &var);
 }
 
-int cd(cmd_t *cmd, char **envp)
+int	cd(cmd_t *cmd, char **envp)
 {
 	if (!*(++cmd->arg))
 	{
@@ -211,7 +236,7 @@ int cd(cmd_t *cmd, char **envp)
 	return (0);
 }
 
-void echom(cmd_t *cmd)
+void	echom(cmd_t *cmd)
 {
 	var_t	var;
 	int		nline;
@@ -227,16 +252,14 @@ void echom(cmd_t *cmd)
 				cmd->arg[var.iter_j][var.iter_i] == 'n')
 			;
 		if (cmd->arg[var.iter_j][var.iter_i] != '\0')
-			break;
+			break ;
 		else
 			nline = 0;
 	}
 	while (cmd->arg[var.iter_j]
 		&& write(1, cmd->arg[var.iter_j], ft_strlen(cmd->arg[var.iter_j])))
-	{
 		if (cmd->arg[++var.iter_j])
-		ft_putchar_fd(' ', 1);
-	}
+			ft_putchar_fd(' ', 1);
 	if (nline)
 		ft_putchar_fd('\n', 1);
 }
@@ -244,16 +267,15 @@ void echom(cmd_t *cmd)
 void	env(char **envp)
 {
 	while (*envp)
-		if (ft_strchr(*envp, '='))
-		{
-			ft_putstr_fd(*envp++, 1);
-			ft_putstr_fd("\n", 1);
-		}
-		else
+	{
+		if (!ft_strchr(*envp, '='))
 		{
 			++envp;
 			continue ;
 		}
+		ft_putstr_fd(*envp++, 1);
+		ft_putstr_fd("\n", 1);
+	}
 }
 
 void	print_err_arg(const char *s)
@@ -267,8 +289,8 @@ void	print_err_arg(const char *s)
 long int	msh_atoi(const char *s)
 {
 	unsigned long	val;
-	int		i;
-	int		k;
+	int				i;
+	int				k;
 
 	val = 0;
 	i = 0;
@@ -281,13 +303,13 @@ long int	msh_atoi(const char *s)
 	while (ft_isdigit(s[i]))
 	{
 		val = (val * 10) + s[i++] - '0';
-		if (val &&  ((val > LONG_MAX && k == 1) || -val < LONG_MIN))
+		if (val && ((val > LONG_MAX && k == 1) || - (long)val < LONG_MIN))
 			print_err_arg(s);
 	}
 	return (val * k);
 }
 
-void exitm(cmd_t *cmd)
+void	exitm(cmd_t *cmd)
 {
 	var_t	var;
 	long	val;
@@ -305,14 +327,12 @@ void exitm(cmd_t *cmd)
 				print_err_arg(cmd->arg[1]);
 			var.iter_i++;
 		}
-		val = msh_atoi(cmd->arg[1]); 
-		if (cmd->arg[2])
-		{
-			ft_putstr_fd("msh: exit: too many arguments\n", 2);
-			g_status = 1;
-			return ;
-		}
-		exit(val);
+		val = msh_atoi(cmd->arg[1]);
+		if (!cmd->arg[2])
+			exit(val);
+		ft_putstr_fd("msh: exit: too many arguments\n", 2);
+		g_status = 1;
+		return ;
 	}
 	exit(0);
 }

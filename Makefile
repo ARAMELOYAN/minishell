@@ -13,13 +13,13 @@ FLAGS = -Wall -Wextra -Werror
 RM = rm -rf
 
 .c.o:
-	$(CC) -c $< -o $(<:.c=.o)
+	$(CC) $(FLAGS) -c $< -o $(<:.c=.o)
 
 $(NAME): $(OBJS)
 	$(MAKE) bonus -C ./libft
 	mv libft/libft.a .
 	$(MAKE) -C ./libft fclean
-	$(CC) $(OBJS) -L. -lft  -L./aeloyan-readline/lib  -lreadline -I./aeloyan-readline/include -o $(NAME)
+	$(CC) $(FLAGS) $(OBJS) -L. -lft  -L./aeloyan-readline/lib  -lreadline -I./aeloyan-readline/include -o $(NAME)
 
 all: $(NAME)
 
