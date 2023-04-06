@@ -1,16 +1,34 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   minishell.c                                        :+:      :+:    :+:   */
+/*   run.c                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/02/06 13:45:59 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/06 00:10:28 by aeloyan          ###   ########.fr       */
+/*   Created: 2023/04/06 14:03:24 by aeloyan           #+#    #+#             */
+/*   Updated: 2023/04/06 14:10:42 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
+
+int	find_and_run(t_cmd *cmd, t_var *var, char **envp)
+{
+	var->cmd_path = ft_strjoin(var->path_split[var->iter_i], "/");
+	var->cmd_path_1 = ft_strjoin(var->cmd_path, cmd->arg[0]);
+	free(var->cmd_path);
+	if (!access(var->cmd_path_1, X_OK))
+	{
+		if (execve(var->cmd_path_1, cmd->arg, envp) == -1)
+		{
+			perror("msh: execve");
+			return (errno);
+		}
+		free(var->cmd_path_1);
+	}
+	var->iter_i++;
+	return (0);
+}
 
 char	*my_getenv(char **env, char *key)
 {

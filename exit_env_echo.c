@@ -6,7 +6,7 @@
 /*   By: aeloyan <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/05 22:50:38 by aeloyan           #+#    #+#             */
-/*   Updated: 2023/04/06 00:07:29 by aeloyan          ###   ########.fr       */
+/*   Updated: 2023/04/06 15:12:37 by aeloyan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,8 @@ long int	msh_atoi(const char *s)
 	while (ft_isdigit(s[i]))
 	{
 		val = (val * 10) + s[i++] - '0';
-		if (val && ((val > LONG_MAX && k == 1) || - (long)val < LONG_MIN))
+		if (val && ((val > LONG_MAX && k == 1)
+				|| - val < (unsigned long)LONG_MIN))
 			print_err_arg(s);
 	}
 	return (val * k);
